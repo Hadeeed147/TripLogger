@@ -114,11 +114,11 @@ Errors: `400` (validation: missing fields, cycle outside 0–70), `422` (geocode
 
 - Minute-resolution simulation; deterministic; pure functions over dataclasses.
 - Accumulators: `drive_since_break` (limit 8 h), `drive_since_rest` (11 h), `window_elapsed` (14 h from shift start), `cycle_used` (70 h). Reset rules as in "HOS rules" above.
-- Events, in priority order at each step: leg end (emit 1 h ON_DUTY pickup/dropoff), fuel due (30 min ON_DUTY), break due (30 min OFF), 11 h/14 h due (10 h OFF rest, split SLEEPER for realism: rendered as sleeper-berth line), cycle exhausted (34 h OFF restart).
+- Events, in priority order at each step: leg end (emit 1 h ON_DUTY pickup/dropoff), fuel due (30 min ON_DUTY), break due (30 min OFF), 11 h/14 h due (10 h rest emitted as SLEEPER), cycle exhausted (34 h restart emitted as OFF).
+- Status mapping is fixed: 10 h rests → SLEEPER row; 30 min breaks → OFF row; 34 h restart → OFF row; pickup/dropoff/fuel → ON_DUTY row. This exercises all four grid rows and matches how drivers actually log.
 - Merge rule: after ANY non-driving segment ≥ 30 min, `drive_since_break` resets — fuel and pickup stops double as breaks.
 - Stop coordinates: interpolate route polyline at cumulative-mile mark (haversine along geometry); no extra routing calls.
 - `logsheets.py`: split segments at midnight boundaries; pad first day from 00:00 and last day to 24:00 with OFF; snap every transition to 15-min grid; recompute totals from snapped grid so they sum to exactly 1440 min/day.
-- Rest periods render on the Sleeper Berth row; short breaks on Off Duty row (matches how real drivers log them, and exercises all four grid rows).
 
 ## ELD log sheet rendering (frontend)
 
