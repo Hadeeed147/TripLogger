@@ -84,3 +84,23 @@ def test_rest_resets_all_shift_accumulators():
     post = tl.segments[rest_idx + 1]
     assert post.status == DutyStatus.DRIVING
     assert post.minutes > 300  # not immediately re-broken
+
+def test_no_fuel_stop_under_1000_miles():
+    tl = plan_trip([Leg(0, 0), Leg(999, 999)], 0.0, START)
+    assert all(s.label != "Fuel stop" for s in tl.segments)
+
+def test_fuel_stop_at_1000_miles_and_accumulator_carries_across_rest():
+    tl = plan_trip([Leg(0, 0), Leg(1100, 1100)], 0.0, START)
+    fuels = [s for s in tl.segments if s.label == "Fuel stop"]
+    assert len(fuels) == 1
+    assert abs(fuels[0].start_odometer - 1000.0) < 0.5
+    assert fuels[0].status == DutyStatus.ON_DUTY
+
+def test_fuel_stop_satisfies_30min_break():
+    # Fuel at 1000mi lands when 440 min of driving accumulated since rest;
+    # afterwards driver continues 100mi with no extra break even though
+    # cumulative driving since the last OFF-break would exceed 8h.
+    tl = plan_trip([Leg(0, 0), Leg(1100, 1100)], 0.0, START)
+    fuel_idx = next(i for i, s in enumerate(tl.segments) if s.label == "Fuel stop")
+    tail = tl.segments[fuel_idx + 1:]
+    assert all(s.label != "30-min break" for s in tail)
