@@ -5,10 +5,19 @@ import type { GridEntryDto, Status } from "../../api/types";
  * step-line across all four grid rows, the way the paper ELD form's pen
  * line jumps between rows at each status change and runs flat within a row.
  *
- * `grid` must be contiguous and cover the full day (0..1440 minutes) - that
- * invariant is guaranteed by the backend log-sheet builder (Task 9).
+ * `grid` must be contiguous and cover the full span (0..`totalMinutes`) -
+ * for LogSheet's single-day grid that invariant is guaranteed by the backend
+ * log-sheet builder (Task 9). `totalMinutes` defaults to 1440 (one calendar
+ * day) for that case.
  *
- * x scale: minute `m` -> `x0 + (m / 1440) * (colWidth * 24)`.
+ * `totalMinutes` generalizes the scale beyond a single day: TripTimeline's
+ * mini step-line (Polish G) passes the full trip's duration in minutes and
+ * feeds entries with minutes-from-trip-start instead of minutes-from-
+ * midnight, so the same helper draws one continuous line across every day
+ * of the trip at a consistent per-hour scale.
+ *
+ * x scale: minute `m` -> `x0 + (m / totalMinutes) * (colWidth * (totalMinutes / 60))`,
+ * i.e. `colWidth` is always "pixels per hour" regardless of `totalMinutes`.
  * y per entry: `rowY[entry.status]`.
  *
  * The path starts with an absolute moveto at the first entry's row, then
@@ -21,9 +30,10 @@ export function buildStepPath(
   x0: number,
   colWidth: number,
   rowY: Record<Status, number>,
+  totalMinutes = 1440,
 ): string {
-  const dayWidth = colWidth * 24;
-  const xAt = (min: number) => x0 + (min / 1440) * dayWidth;
+  const totalWidth = colWidth * (totalMinutes / 60);
+  const xAt = (min: number) => x0 + (min / totalMinutes) * totalWidth;
 
   if (grid.length === 0) return "";
 
