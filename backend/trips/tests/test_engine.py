@@ -45,7 +45,7 @@ def test_break_inserted_after_8h_driving():
     assert tl.segments[2].label == "30-min break"
 
 def test_no_break_under_8h_driving():
-    tl = plan_trip([Leg(430, 469)], 0.0, START)  # 7h49m driving
+    tl = plan_trip([Leg(0, 0), Leg(430, 469)], 0.0, START)  # 7h49m driving
     assert all(s.label != "30-min break" for s in tl.segments)
 
 def test_pickup_resets_break_accumulator():
