@@ -68,7 +68,7 @@ export default function RouteMap({ plan }: RouteMapProps) {
           <Marker
             key={`${stop.type}-${index}-${stop.miles_from_origin}`}
             position={[stop.lat, stop.lng]}
-            icon={createStopIcon(stop.type)}
+            icon={createStopIcon(stop.type, index)}
           >
             <Popup>
               <div className="route-popup">

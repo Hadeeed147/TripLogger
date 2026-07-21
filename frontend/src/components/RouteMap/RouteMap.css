@@ -44,6 +44,24 @@
   border: 2px solid var(--surface-0);
   border-radius: 50%;
   box-shadow: var(--shadow-md);
+  animation: rm-pin-drop-in var(--duration-slower) var(--ease-out) both;
+  animation-delay: var(--rm-pin-delay, 0ms);
+}
+
+/* Subtle drop-in stagger, delay set per-marker via --rm-pin-delay (see
+   createStopIcon in markers.ts). Plain CSS, not GSAP - Leaflet mounts this
+   markup itself outside React/GSAP's reach. prefers-reduced-motion is
+   already handled globally in tokens.css (collapses all animation-duration
+   to ~0, landing instantly on the "to" state). */
+@keyframes rm-pin-drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-10px) scale(0.6);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
 
 .rm-pin::after {
