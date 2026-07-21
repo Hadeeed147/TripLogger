@@ -45,7 +45,21 @@ def test_remarks_carry_labels_and_locations():
     ])
     d = build_day_logs(tl)[0]
     assert any(r.note == "Pickup" and r.location == "Denver, CO" and r.time_min == 540
+               and r.end_min == 600
                for r in d.remarks)
+
+def test_remark_spanning_midnight_splits_across_days():
+    tl = Timeline([
+        seg(DutyStatus.DRIVING, datetime(2026, 7, 21, 12), datetime(2026, 7, 21, 22), miles=550, label="Driving"),
+        seg(DutyStatus.SLEEPER, datetime(2026, 7, 21, 22), datetime(2026, 7, 22, 8), label="10-hour rest"),
+        seg(DutyStatus.DRIVING, datetime(2026, 7, 22, 8), datetime(2026, 7, 22, 9), miles=55, label="Driving"),
+    ])
+    days = build_day_logs(tl)
+    assert len(days) == 2
+    day1_rest = next(r for r in days[0].remarks if r.note == "10-hour rest")
+    assert day1_rest.time_min == 1320 and day1_rest.end_min == 1440
+    day2_rest = next(r for r in days[1].remarks if r.note == "10-hour rest")
+    assert day2_rest.time_min == 0 and day2_rest.end_min == 480
 
 def test_multiday_rest_spans_midnight():
     tl = Timeline([
