@@ -8,6 +8,7 @@ import DayTabs from "./components/DayTabs/DayTabs";
 import TripTimeline from "./components/TripTimeline/TripTimeline";
 import LoadingSteps from "./components/LoadingSteps";
 import RouteGlobe from "./components/RouteGlobe/RouteGlobe";
+import RouteReveal from "./components/RouteReveal";
 import ThemeToggle from "./components/ThemeToggle";
 import { ApiError, planTrip } from "./api/client";
 import type { DayLogDto, TripPlan, TripRequest } from "./api/types";
@@ -57,9 +58,19 @@ function App() {
   return <TripPlannerApp />;
 }
 
+/**
+ * Reveal state machine (Polish H): `idle` covers both "nothing submitted
+ * yet" and "settled after a reveal/error" - whatever's shown then (empty
+ * state vs. dashboard) is driven purely by whether `plan` is set, same as
+ * before this polish pass. `loading` is the in-flight API call (LoadingSteps
+ * globe + phase captions, unchanged). `revealing` is the post-success route
+ * reveal walkthrough, skippable back to `idle` at any point.
+ */
+type RevealPhase = "idle" | "loading" | "revealing";
+
 function TripPlannerApp() {
   const [plan, setPlan] = useState<TripPlan | null>(null);
-  const [loading, setLoading] = useState(false);
+  const [revealPhase, setRevealPhase] = useState<RevealPhase>("idle");
   const [error, setError] = useState<AppError | null>(null);
   const [lastRequest, setLastRequest] = useState<TripRequest | null>(null);
   const tripFormRef = useRef<TripFormHandle>(null);
@@ -70,11 +81,15 @@ function TripPlannerApp() {
 
   const submit = useCallback(async (req: TripRequest) => {
     setLastRequest(req);
-    setLoading(true);
+    setRevealPhase("loading");
     setError(null);
     try {
       const result = await planTrip(req);
       setPlan(result);
+      // Reduced-motion users (and anyone whose media query flips mid-session)
+      // skip the walkthrough entirely and land straight on the dashboard.
+      const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      setRevealPhase(reducedMotion ? "idle" : "revealing");
     } catch (err) {
       if (err instanceof ApiError) {
         setError({ field: err.field, detail: err.detail });
@@ -85,8 +100,10 @@ function TripPlannerApp() {
       } else {
         setError({ detail: "Something went wrong. Please try again." });
       }
-    } finally {
-      setLoading(false);
+      // Errors bypass the reveal entirely - straight back to idle so the
+      // banner/field error shows with the form intact (old plan, if any,
+      // stays visible underneath, same as before this polish pass).
+      setRevealPhase("idle");
     }
   }, []);
 
@@ -137,15 +154,21 @@ function TripPlannerApp() {
           </div>
         )}
 
-        <TripForm ref={tripFormRef} onSubmit={submit} loading={loading} fieldError={fieldError} />
+        <TripForm
+          ref={tripFormRef}
+          onSubmit={submit}
+          loading={revealPhase !== "idle"}
+          fieldError={fieldError}
+        />
 
-        <LoadingSteps active={loading} />
+        <LoadingSteps active={revealPhase === "loading"} />
 
-        {plan ? (
-          <ResultsDashboard plan={plan} />
-        ) : (
-          !loading && <EmptyState onSelectExample={handleSelectExample} />
+        {revealPhase === "revealing" && plan && (
+          <RouteReveal key={plan.summary.arrival} plan={plan} onDone={() => setRevealPhase("idle")} />
         )}
+
+        {revealPhase === "idle" &&
+          (plan ? <ResultsDashboard plan={plan} /> : <EmptyState onSelectExample={handleSelectExample} />)}
       </main>
     </div>
   );
