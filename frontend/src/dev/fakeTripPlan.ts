@@ -1,6 +1,8 @@
-// Dev-only fixture used by the #map preview in App.tsx to exercise RouteMap
-// without hitting the backend. Not imported by any production component.
+// Dev-only fixtures used by the #map/#dashboard previews in App.tsx to
+// exercise RouteMap/the results dashboard without hitting the backend. Not
+// imported by any production component.
 import type { TripPlan } from "../api/types";
+import { fakeDayLogs } from "./fakeDayLogs";
 
 const CHICAGO: [number, number] = [41.8781, -87.6298];
 const DENVER: [number, number] = [39.7392, -104.9903];
@@ -104,5 +106,61 @@ export const fakeTripPlan: TripPlan = {
     },
   ],
   segments: [],
-  logs: [],
+  logs: fakeDayLogs,
+};
+
+/**
+ * A second fixture for the #dashboard-short dev harness - a same-day, no-
+ * restart trip, so DayTabs' single-tab case and TripSummary without the
+ * amber callout can both be screenshot-checked without a backend.
+ */
+export const fakeTripPlanShort: TripPlan = {
+  locations: {
+    current: { query: "Chicago, IL", display_name: "Chicago, Illinois, USA", lat: CHICAGO[0], lng: CHICAGO[1] },
+    pickup: { query: "Bloomington, IL", display_name: "Bloomington, Illinois, USA", lat: 40.4842, lng: -88.9937 },
+    dropoff: {
+      query: "Indianapolis, IN",
+      display_name: "Indianapolis, Indiana, USA",
+      lat: 39.7684,
+      lng: -86.1581,
+    },
+  },
+  route: {
+    geometry: lerpPoints(CHICAGO, [39.7684, -86.1581], 12),
+    total_miles: 210,
+    total_duration_hrs: 3.8,
+  },
+  summary: {
+    total_days: 1,
+    total_miles: 210,
+    driving_hrs: 3.8,
+    on_duty_hrs: 4.8,
+    rest_stops: 0,
+    fuel_stops: 0,
+    breaks: 0,
+    restart_inserted: false,
+    arrival: "2026-07-21T15:45:00",
+  },
+  stops: [
+    {
+      type: "pickup",
+      lat: 40.4842,
+      lng: -88.9937,
+      arrival: "2026-07-21T13:00:00",
+      duration_min: 60,
+      label: "Pickup - Bloomington, IL",
+      miles_from_origin: 130,
+    },
+    {
+      type: "dropoff",
+      lat: 39.7684,
+      lng: -86.1581,
+      arrival: "2026-07-21T15:45:00",
+      duration_min: 60,
+      label: "Dropoff - Indianapolis, IN",
+      miles_from_origin: 210,
+    },
+  ],
+  segments: [],
+  logs: [fakeDayLogs[0]],
 };

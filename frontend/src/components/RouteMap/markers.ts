@@ -68,12 +68,19 @@ function readColorVar(name: string): string {
  * visual tip points exactly at the coordinate. Deliberately not a rotated
  * teardrop (avoids the classic "counter-rotate the inner icon" fiddliness)
  * while still reading as a distinct pin rather than a plain dot.
+ *
+ * `index` (a stop's position along the route) drives a CSS custom property
+ * consumed by the `.rm-pin` entrance keyframe in RouteMap.css, so markers
+ * drop in with a subtle stagger instead of all popping in at once. This is
+ * plain CSS (not GSAP) because Leaflet mounts marker DOM itself, outside
+ * React's tree, once per marker as the map lays out - a per-element
+ * animation-delay is the simplest way to stagger it.
  */
-export function createStopIcon(type: StopType): L.DivIcon {
+export function createStopIcon(type: StopType, index = 0): L.DivIcon {
   const meta = STOP_META[type];
   const color = readColorVar(meta.colorVar);
   const html = `
-    <div class="rm-pin" style="--rm-pin-color:${color}" title="${meta.label}">
+    <div class="rm-pin" style="--rm-pin-color:${color};--rm-pin-delay:${index * 60}ms" title="${meta.label}">
       <span class="rm-pin__glyph">${meta.glyph}</span>
     </div>
   `;
