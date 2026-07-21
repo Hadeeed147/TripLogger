@@ -31,3 +31,24 @@ def test_odometer_tracks_route_miles():
     tl = plan_trip([Leg(60, 60), Leg(120, 120)], 0.0, START)
     assert tl.segments[2].start_odometer == 60.0
     assert tl.segments[2].end_odometer == 180.0
+
+def test_break_inserted_after_8h_driving():
+    # pickup first (0-mi deadhead), then 10h of driving at 55 mph
+    tl = plan_trip([Leg(0, 0), Leg(550, 600)], 0.0, START)
+    assert statuses(tl) == [
+        (DutyStatus.ON_DUTY, 60),          # pickup (resets break accumulator)
+        (DutyStatus.DRIVING, 480),         # 8h
+        (DutyStatus.OFF, 30),              # 30-min break
+        (DutyStatus.DRIVING, 120),
+        (DutyStatus.ON_DUTY, 60),          # dropoff
+    ]
+    assert tl.segments[2].label == "30-min break"
+
+def test_no_break_under_8h_driving():
+    tl = plan_trip([Leg(430, 469)], 0.0, START)  # 7h49m driving
+    assert all(s.label != "30-min break" for s in tl.segments)
+
+def test_pickup_resets_break_accumulator():
+    # 7h drive, 1h pickup (resets the 8h accumulator), 7h drive: no break ever needed
+    tl = plan_trip([Leg(420, 420), Leg(420, 420)], 0.0, START)
+    assert all(s.label != "30-min break" for s in tl.segments)
