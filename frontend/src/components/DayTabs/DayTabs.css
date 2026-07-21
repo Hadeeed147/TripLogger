@@ -1,0 +1,57 @@
+/*
+  DayTabs - pill tab track (structural baseline: 21st.dev "Tabs", pill
+  variant) + tab panel hosting the active day's LogSheet. Restyled entirely
+  with TripLogger tokens, no library CSS pulled in.
+*/
+
+.day-tabs {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.day-tabs__list {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+
+.day-tabs__tab {
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.day-tabs__tab:hover {
+  color: var(--color-text-strong);
+}
+
+.day-tabs__tab--active {
+  background: var(--color-surface);
+  box-shadow: var(--shadow-sm);
+  color: var(--color-text-strong);
+}
+
+.day-tabs__panel {
+  width: 100%;
+}
+
+.day-tabs__logsheet-wrap {
+  width: 100%;
+}
