@@ -7,6 +7,7 @@ import TripSummary from "./components/TripSummary/TripSummary";
 import DayTabs from "./components/DayTabs/DayTabs";
 import TripTimeline from "./components/TripTimeline/TripTimeline";
 import LoadingSteps from "./components/LoadingSteps";
+import RouteGlobe from "./components/RouteGlobe/RouteGlobe";
 import ThemeToggle from "./components/ThemeToggle";
 import { ApiError, planTrip } from "./api/client";
 import type { DayLogDto, TripPlan, TripRequest } from "./api/types";
@@ -219,13 +220,21 @@ function PrintButton() {
  * fillExample() ref method.
  */
 function EmptyState({ onSelectExample }: { onSelectExample?: (trip: ExampleTrip) => void }) {
+  const [globeSupported, setGlobeSupported] = useState(true);
+
   return (
     <div className="app-empty">
-      <span className="app-empty__icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M3 12h4l2-7 4 14 2-7h6" />
-        </svg>
-      </span>
+      {globeSupported ? (
+        <div className="app-empty__globe" aria-hidden="true">
+          <RouteGlobe size={200} onSupportChange={setGlobeSupported} />
+        </div>
+      ) : (
+        <span className="app-empty__icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 12h4l2-7 4 14 2-7h6" />
+          </svg>
+        </span>
+      )}
       <p className="app-empty__title">Plan a trip to see your route and daily logs</p>
       <p className="app-empty__sub">
         Fill in the current, pickup, and dropoff locations above and TripLogger will map the route and build
