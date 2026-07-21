@@ -20,10 +20,10 @@ export const fakeDayLogs: DayLogDto[] = [
     ],
     totals: { off: 330, sleeper: 390, driving: 660, on_duty: 60 },
     remarks: [
-      { time_min: 300, city_state: "Chicago, IL", note: "Pre-trip inspection" },
-      { time_min: 660, city_state: "Bloomington, IL", note: "30-min break" },
-      { time_min: 690, city_state: "Bloomington, IL", note: "Resume driving" },
-      { time_min: 1020, city_state: "Indianapolis, IN", note: "Fuel stop" },
+      { time_min: 300, city_state: "Chicago, IL", note: "Pre-trip" },
+      { time_min: 660, city_state: "Bloomington, IL", note: "Break" },
+      { time_min: 690, city_state: "Bloomington, IL", note: "Resume" },
+      { time_min: 1020, city_state: "Indianapolis, IN", note: "Fuel" },
     ],
   },
   {
@@ -40,9 +40,9 @@ export const fakeDayLogs: DayLogDto[] = [
     ],
     totals: { off: 120, sleeper: 600, driving: 660, on_duty: 60 },
     remarks: [
-      { time_min: 600, city_state: "Grand Junction, CO", note: "End rest, pre-trip" },
-      { time_min: 960, city_state: "Grand Junction, CO", note: "30-min break" },
-      { time_min: 1320, city_state: "Las Vegas, NV", note: "Fuel stop" },
+      { time_min: 600, city_state: "Grand Junction, CO", note: "End rest" },
+      { time_min: 960, city_state: "Grand Junction, CO", note: "Break" },
+      { time_min: 1320, city_state: "Las Vegas, NV", note: "Fuel" },
     ],
   },
   {
@@ -57,7 +57,7 @@ export const fakeDayLogs: DayLogDto[] = [
     ],
     totals: { off: 1140, sleeper: 0, driving: 240, on_duty: 60 },
     remarks: [
-      { time_min: 450, city_state: "Las Vegas, NV", note: "Pre-trip inspection" },
+      { time_min: 450, city_state: "Las Vegas, NV", note: "Pre-trip" },
       { time_min: 480, city_state: "Las Vegas, NV", note: "Depart" },
       { time_min: 720, city_state: "Los Angeles, CA", note: "Dropoff" },
     ],
