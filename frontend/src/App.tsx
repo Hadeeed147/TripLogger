@@ -5,6 +5,7 @@ import RouteMap from "./components/RouteMap/RouteMap";
 import LogSheet from "./components/LogSheet/LogSheet";
 import TripSummary from "./components/TripSummary/TripSummary";
 import DayTabs from "./components/DayTabs/DayTabs";
+import TripTimeline from "./components/TripTimeline/TripTimeline";
 import LoadingSteps from "./components/LoadingSteps";
 import ThemeToggle from "./components/ThemeToggle";
 import { ApiError, planTrip } from "./api/client";
@@ -150,20 +151,63 @@ function TripPlannerApp() {
 }
 
 /**
- * The assembled results dashboard: stat cards -> route map -> day tabs
- * (each hosting that day's LogSheet). Replaces the Task-15-era JSON
- * placeholder. A stable `key` on the outer section (the trip's arrival
- * timestamp, unique per plan) forces a fresh mount whenever a new plan
- * comes back from a resubmission, which is what makes TripSummary's
- * stagger-in + count-up replay on every new result rather than only once.
+ * The assembled results dashboard: stat cards -> trip timeline -> route map
+ * -> day tabs (each hosting that day's LogSheet), plus a print affordance.
+ * Replaces the Task-15-era JSON placeholder. A stable `key` on the outer
+ * section (the trip's arrival timestamp, unique per plan) forces a fresh
+ * mount whenever a new plan comes back from a resubmission, which is what
+ * makes TripSummary's stagger-in + count-up replay on every new result
+ * rather than only once - it also resets `activeDayIndex` back to 0 for the
+ * new trip, which is the behavior we want on a resubmission.
+ *
+ * `activeDayIndex` is lifted here (Polish D) rather than living inside
+ * DayTabs, because TripTimeline's block clicks need to be able to switch the
+ * active day too - both components are controlled from this single piece of
+ * state, with DayTabs still falling back to its own internal state if ever
+ * used standalone without these props.
  */
 function ResultsDashboard({ plan }: { plan: TripPlan }) {
+  const [activeDayIndex, setActiveDayIndex] = useState(0);
+
   return (
     <section className="app-dashboard" aria-label="Trip results" key={plan.summary.arrival}>
       <TripSummary summary={plan.summary} />
+      <TripTimeline plan={plan} activeIndex={activeDayIndex} onSelectDay={setActiveDayIndex} />
       <RouteMap plan={plan} />
-      <DayTabs logs={plan.logs} />
+      <div className="app-dashboard__logs-header">
+        <PrintButton />
+      </div>
+      <DayTabs logs={plan.logs} activeIndex={activeDayIndex} onChange={setActiveDayIndex} />
+
+      {/* Print-only: every day's log sheet stacked, one per printed page
+          (see the `@media print` rules in App.css) - never shown on screen,
+          so the active DayTabs panel above is what a sighted user actually
+          sees and interacts with. */}
+      <div className="app-print-logs" aria-hidden="true">
+        {plan.logs.map((log) => (
+          <div className="app-print-logs__page" key={log.date}>
+            <LogSheet day={log} date={log.date} />
+          </div>
+        ))}
+      </div>
     </section>
+  );
+}
+
+/** Printer-icon button that triggers the browser's native print dialog.
+ *  The `@media print` stylesheet (App.css) does the actual layout swap - see
+ *  the print-only stacked-logs container above. */
+function PrintButton() {
+  return (
+    <button type="button" className="print-button" onClick={() => window.print()}>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+        <path d="M7 8.5V3.75h10V8.5" />
+        <rect x="4.5" y="8.5" width="15" height="8" rx="1.5" />
+        <rect x="7" y="13" width="10" height="7.25" rx="0.75" />
+        <path d="M7.5 16h9" />
+      </svg>
+      Print logs
+    </button>
   );
 }
 

@@ -41,6 +41,19 @@
   border-radius: var(--radius-sm);
 }
 
+/* Printed sheets: force the paper-white surface even when the app is in
+   dark theme (`--color-surface` would otherwise resolve to a dark panel
+   fill), and drop the on-screen card chrome (border/shadow/rounding) that
+   only makes sense floating over the app background. */
+@media print {
+  .logsheet {
+    background: #fff;
+    border: none;
+    box-shadow: none;
+    padding: 0;
+  }
+}
+
 /* ---------------------------------------------------------------------
    Structural ink - frame, rules, gridlines, ticks.
 --------------------------------------------------------------------- */
@@ -109,6 +122,15 @@
   fill: var(--ink-500);
 }
 
+/* Top-right "ORIGINAL / DUPLICATE" retention legend - fine print, not a
+   caption (no uppercase/letter-spacing treatment), so it reads as a footnote
+   rather than competing with the real captions below it. */
+.logsheet-legend {
+  font-family: var(--font-sans);
+  font-size: 7px;
+  fill: var(--ink-500);
+}
+
 .logsheet-caption {
   font-family: var(--font-sans);
   font-size: 9px;
@@ -148,7 +170,36 @@
 /* ---------------------------------------------------------------------
    Remarks band.
 --------------------------------------------------------------------- */
+
+/* Miniature 24h ruler at the top of the band - a light echo of the main
+   hour scale above, just enough to visually confirm brackets line up. */
+.logsheet-remarks-ruler-line {
+  stroke: var(--navy-700);
+  stroke-width: 1;
+  opacity: 0.45;
+}
+
+.logsheet-remarks-ruler-tick {
+  stroke: var(--navy-500);
+  stroke-width: 0.75;
+  opacity: 0.45;
+}
+
+.logsheet-remarks-ruler-label {
+  font-family: var(--font-sans);
+  font-size: 7px;
+  fill: var(--ink-500);
+}
+
 .logsheet-remark-tick {
+  stroke: var(--navy-700);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+/* The horizontal bar joining a bracket's two stubs - same weight as the
+   stubs themselves so the whole bracket reads as one continuous mark. */
+.logsheet-remark-bracket-bar {
   stroke: var(--navy-700);
   stroke-width: 1;
   opacity: 0.6;
@@ -167,4 +218,20 @@
   font-family: var(--font-sans);
   font-size: 8.5px;
   fill: var(--ink-700);
+}
+
+/* Driver's-signature field - the one deliberate script-ish flourish on the
+   sheet (italic serif, no new font loaded), underlined like a signature
+   line on the paper form. */
+.logsheet-signature-value {
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 15px;
+  font-style: italic;
+  fill: var(--ink-900);
+}
+
+.logsheet-signature-line {
+  stroke: var(--navy-700);
+  stroke-width: 1;
+  opacity: 0.55;
 }

@@ -4,28 +4,19 @@ import { useGSAP } from "@gsap/react";
 import "./DayTabs.css";
 import LogSheet from "../LogSheet/LogSheet";
 import type { DayLogDto } from "../../api/types";
+import { formatDayLabel } from "../../utils/dayLabel";
 
 gsap.registerPlugin(useGSAP);
 
 interface DayTabsProps {
   logs: DayLogDto[];
-}
-
-const WEEKDAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
-/**
- * Formats a "YYYY-MM-DD" log date as "Mon 7/21" (weekday + numeric
- * month/day, no leading zeros, no year - matches the task brief's example).
- * Built from the date's own y/m/d components rather than `new Date(iso)`
- * because that parses a date-only ISO string as UTC midnight, which can
- * roll the weekday back a day in negative-offset timezones. `day.date` is a
- * calendar date, not an instant, so it's constructed as local y/m/d instead
- * (the same approach LogSheet's own `dateParts` helper takes).
- */
-function formatTabLabel(iso: string): string {
-  const [year, month, day] = iso.split("-").map(Number);
-  const date = new Date(year ?? 1970, (month ?? 1) - 1, day ?? 1);
-  return `${WEEKDAYS[date.getDay()]} ${month}/${day}`;
+  /** Controlled active-tab index (Polish D: lifted to App so TripTimeline's
+   *  block clicks can switch the day too). When omitted, DayTabs falls back
+   *  to its own internal state - existing/standalone usage keeps working. */
+  activeIndex?: number;
+  /** Called on every tab selection (click or keyboard) when `activeIndex`
+   *  is controlled. Ignored in uncontrolled mode. */
+  onChange?: (index: number) => void;
 }
 
 /**
@@ -36,14 +27,24 @@ function formatTabLabel(iso: string): string {
  * pulled in. Keyboard support follows the WAI-ARIA tabs pattern: arrow
  * keys move both focus and selection, Home/End jump to the ends.
  */
-export default function DayTabs({ logs }: DayTabsProps) {
-  const [activeIndex, setActiveIndex] = useState(0);
+export default function DayTabs({ logs, activeIndex: controlledIndex, onChange }: DayTabsProps) {
+  const [internalIndex, setInternalIndex] = useState(0);
+  const isControlled = controlledIndex !== undefined;
+  const activeIndex = isControlled ? controlledIndex : internalIndex;
   const tabRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
   if (logs.length === 0) return null;
 
   const clampedIndex = Math.min(activeIndex, logs.length - 1);
   const active = logs[clampedIndex];
+
+  function setActiveIndex(index: number) {
+    if (isControlled) {
+      onChange?.(index);
+    } else {
+      setInternalIndex(index);
+    }
+  }
 
   function selectTab(index: number) {
     const clamped = (index + logs.length) % logs.length;
@@ -93,7 +94,7 @@ export default function DayTabs({ logs }: DayTabsProps) {
             onClick={() => setActiveIndex(i)}
             onKeyDown={(e) => handleKeyDown(e, i)}
           >
-            {formatTabLabel(log.date)}
+            {formatDayLabel(log.date)}
           </button>
         ))}
       </div>

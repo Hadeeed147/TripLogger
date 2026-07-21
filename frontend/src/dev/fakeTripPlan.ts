@@ -1,8 +1,59 @@
 // Dev-only fixtures used by the #map/#dashboard previews in App.tsx to
 // exercise RouteMap/the results dashboard without hitting the backend. Not
 // imported by any production component.
+import type { DayLogDto, SegmentDto } from "../api/types";
 import type { TripPlan } from "../api/types";
 import { fakeDayLogs } from "./fakeDayLogs";
+
+/**
+ * Derives full-trip SegmentDto[] from a set of per-day DayLogDto fixtures,
+ * for the #dashboard preview's TripTimeline strip (real trips get segments
+ * straight from the backend - this reconstruction only exists so the dev
+ * fixture doesn't have to hand-maintain two parallel, easily-inconsistent
+ * data shapes). Each day's grid entries become one segment apiece, with
+ * `start`/`end` promoted from day-local minutes to absolute ISO instants,
+ * driving miles prorated across that day's driving entries by duration, and
+ * `location_hint` borrowed from any remark whose span covers the entry's
+ * start.
+ */
+function buildSegmentsFromLogs(logs: DayLogDto[]): SegmentDto[] {
+  const segments: SegmentDto[] = [];
+  let cumulativeMiles = 0;
+
+  for (const day of logs) {
+    const [y, m, d] = day.date.split("-").map(Number);
+    const dayStart = new Date(y ?? 1970, (m ?? 1) - 1, d ?? 1, 0, 0, 0, 0);
+
+    const totalDrivingMin =
+      day.grid.filter((g) => g.status === "driving").reduce((sum, g) => sum + (g.end_min - g.start_min), 0) || 1;
+
+    for (const entry of day.grid) {
+      const start = new Date(dayStart);
+      start.setMinutes(entry.start_min);
+      const end = new Date(dayStart);
+      end.setMinutes(entry.end_min);
+
+      const durationMin = entry.end_min - entry.start_min;
+      const miles =
+        entry.status === "driving" ? Math.round((durationMin / totalDrivingMin) * day.total_miles) : 0;
+
+      const remark = day.remarks.find((r) => r.time_min <= entry.start_min && r.end_min >= entry.start_min);
+
+      segments.push({
+        status: entry.status,
+        start: start.toISOString(),
+        end: end.toISOString(),
+        miles,
+        start_miles_from_origin: cumulativeMiles,
+        location_hint: remark?.city_state ?? "",
+      });
+
+      cumulativeMiles += miles;
+    }
+  }
+
+  return segments;
+}
 
 const CHICAGO: [number, number] = [41.8781, -87.6298];
 const DENVER: [number, number] = [39.7392, -104.9903];
@@ -105,7 +156,7 @@ export const fakeTripPlan: TripPlan = {
       miles_from_origin: 2015,
     },
   ],
-  segments: [],
+  segments: buildSegmentsFromLogs(fakeDayLogs),
   logs: fakeDayLogs,
 };
 
@@ -161,6 +212,6 @@ export const fakeTripPlanShort: TripPlan = {
       miles_from_origin: 210,
     },
   ],
-  segments: [],
+  segments: buildSegmentsFromLogs([fakeDayLogs[0]]),
   logs: [fakeDayLogs[0]],
 };
