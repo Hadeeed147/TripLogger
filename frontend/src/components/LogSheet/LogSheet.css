@@ -1,0 +1,170 @@
+/*
+  LogSheet - a faithful SVG replica of the FMCSA Driver's Daily Log paper
+  form. Design read: this is a scanned/printed regulatory document, not a
+  dashboard widget, so it deliberately breaks from the app's themed surface
+  system in one way (see below) while still pulling every color, weight, and
+  type value from tokens.css - no bespoke hex values.
+
+  Paper-vs-app-theme decision: the sheet stays a fixed near-white "paper"
+  surface (--surface-0) in BOTH light and dark app themes, the way a scanned
+  PDF of a paper form does not repaint itself when your OS switches theme.
+  Only the outer wrapper (border/shadow) follows the app's theme tokens.
+
+  Ink hierarchy (three deliberate weights, all off the navy ramp - no new
+  hues introduced):
+    - step-line (the actual duty record): navy-700, 2.5 - the boldest mark
+      on the page, exactly per the task brief.
+    - structural rules (frame, row dividers, hour gridlines): navy-700 at
+      reduced opacity - present but quieter than the step-line.
+    - minor ticks (quarter/half-hour): navy-500 at low opacity - present
+      only as a ruler cue, never competing with content.
+  This mirrors real ELD paper forms: heavy ruling for the grid itself,
+  progressively lighter ruling for sub-divisions, and the pen line as the
+  single boldest stroke on the page.
+*/
+
+.logsheet {
+  width: 100%;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+  padding: var(--space-4);
+}
+
+.logsheet__svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  /* Paper stays paper regardless of app theme - see file header note. */
+  background: var(--surface-0);
+  border-radius: var(--radius-sm);
+}
+
+/* ---------------------------------------------------------------------
+   Structural ink - frame, rules, gridlines, ticks.
+--------------------------------------------------------------------- */
+.logsheet-frame {
+  fill: none;
+  stroke: var(--navy-700);
+  stroke-width: 1.5;
+}
+
+.logsheet-rule {
+  stroke: var(--navy-700);
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.logsheet-gridline--hour {
+  stroke: var(--navy-700);
+  stroke-width: 1;
+  opacity: 0.4;
+}
+
+.logsheet-tick {
+  stroke: var(--navy-500);
+}
+
+.logsheet-tick--hour {
+  stroke-width: 1;
+  opacity: 0.55;
+}
+
+.logsheet-tick--half {
+  stroke-width: 0.75;
+  opacity: 0.45;
+}
+
+.logsheet-tick--quarter {
+  stroke-width: 0.5;
+  opacity: 0.35;
+}
+
+/* ---------------------------------------------------------------------
+   The duty-status step-line - the boldest mark on the page. Task 16
+   draws it in with a GSAP stroke-dashoffset animation via this class.
+--------------------------------------------------------------------- */
+.logsheet-stepline {
+  fill: none;
+  stroke: var(--navy-700);
+  stroke-width: 2.5;
+  stroke-linecap: square;
+}
+
+/* ---------------------------------------------------------------------
+   Typography - all sizes are SVG user units (the viewBox is fixed at
+   1000x620, so these scale with the sheet exactly like the ruling does).
+--------------------------------------------------------------------- */
+.logsheet-title {
+  font-family: var(--font-sans);
+  font-size: 22px;
+  font-weight: var(--weight-bold);
+  fill: var(--ink-900);
+}
+
+.logsheet-subtitle {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  fill: var(--ink-500);
+}
+
+.logsheet-caption {
+  font-family: var(--font-sans);
+  font-size: 9px;
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  fill: var(--ink-500);
+}
+
+.logsheet-header-value {
+  font-family: var(--font-sans);
+  font-size: 15px;
+  font-weight: var(--weight-semibold);
+  fill: var(--ink-900);
+}
+
+.logsheet-hour-label {
+  font-family: var(--font-sans);
+  font-size: 10px;
+  fill: var(--ink-700);
+}
+
+.logsheet-row-label {
+  font-family: var(--font-sans);
+  font-size: 11px;
+  font-weight: var(--weight-medium);
+  fill: var(--ink-900);
+}
+
+.logsheet-row-total {
+  font-family: var(--font-sans);
+  font-size: 13px;
+  font-weight: var(--weight-semibold);
+  fill: var(--ink-900);
+}
+
+/* ---------------------------------------------------------------------
+   Remarks band.
+--------------------------------------------------------------------- */
+.logsheet-remark-tick {
+  stroke: var(--navy-700);
+  stroke-width: 1;
+  opacity: 0.6;
+}
+
+/* Short connector drawn only when a label has been nudged off its tick's
+   true x-position to avoid colliding with a neighboring remark. */
+.logsheet-remark-leader {
+  stroke: var(--navy-500);
+  stroke-width: 0.75;
+  stroke-dasharray: 2 2;
+  opacity: 0.6;
+}
+
+.logsheet-remark-label {
+  font-family: var(--font-sans);
+  font-size: 8.5px;
+  fill: var(--ink-700);
+}

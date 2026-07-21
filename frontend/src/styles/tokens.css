@@ -1,0 +1,319 @@
+/*
+  TripLogger design tokens.
+  ------------------------------------------------------------------------
+  Design read: this is a data-dense, trust-critical operational tool (route
+  map + FMCSA ELD log sheets), not a marketing page — the anti-slop landing
+  page skill (design-taste-frontend) is out-of-scope for this surface by its
+  own definition ("dashboards / dense product UI"). Its universal hygiene
+  rules still apply and were used to derive these values: no pure
+  black/white, shadows tinted to the brand hue instead of neutral grey,
+  one locked corner-radius scale, one accent color, WCAG AA contrast,
+  tabular numerals for all figures, both color schemes supported.
+
+  Brand anchors (fixed, non-negotiable): navy #1B2A5E, signal-blue #2F6FED.
+  Full neutral/ink/semantic ramps below are built around those two hues.
+*/
+
+/* Inter itself is loaded via @fontsource/inter (400/500/600/700), imported
+   in main.tsx ahead of this stylesheet — no @font-face or CDN link here. */
+
+:root {
+  /* ---------------------------------------------------------------------
+     Brand
+  --------------------------------------------------------------------- */
+  --navy-900: #0f1838;
+  --navy-800: #142047;
+  --navy-700: #1b2a5e; /* primary brand navy (fixed) */
+  --navy-600: #253876;
+  --navy-500: #2f478f;
+  --navy-100: #e7eaf3;
+  --navy-50: #f2f4f9;
+
+  --accent-700: #1d4fbd;
+  --accent-600: #2557c7;
+  --accent-500: #2f6fed; /* signal-blue accent (fixed) */
+  --accent-400: #5a8bf1;
+  --accent-200: #b7cdfb;
+  --accent-100: #e4edfe;
+
+  /* ---------------------------------------------------------------------
+     Neutral / surface scale
+     Cool ramp with a faint navy undertone (not pure grey, not pure b/w).
+  --------------------------------------------------------------------- */
+  --surface-0: #ffffff;
+  --surface-50: #f7f8fb;
+  --surface-100: #eef1f5;
+  --surface-200: #e3e7ed;
+  --surface-300: #cbd2dc;
+  --surface-400: #9aa5b4;
+  --surface-500: #717c8c;
+  --surface-600: #4f5866;
+  --surface-700: #363e4a;
+  --surface-800: #232933;
+  --surface-900: #12151b;
+
+  /* ---------------------------------------------------------------------
+     Ink (text) scale
+  --------------------------------------------------------------------- */
+  --ink-900: #0e1526; /* headings */
+  --ink-700: #2b3245; /* body */
+  --ink-500: #5b6478; /* secondary */
+  --ink-400: #838b9c; /* placeholder / disabled */
+  --ink-inverse: #f4f6fb; /* text on navy/accent/dark fills */
+
+  /* ---------------------------------------------------------------------
+     Semantic status colors
+     Desaturated to sit alongside navy/blue without competing.
+  --------------------------------------------------------------------- */
+  --success-700: #146945;
+  --success-500: #1d8a5d;
+  --success-100: #e0f3e8;
+
+  --warning-700: #8a5a10;
+  --warning-500: #b7791f;
+  --warning-100: #faf0dd;
+
+  --danger-700: #8c1f24;
+  --danger-500: #c1272d;
+  --danger-100: #fbe9e8;
+
+  /* HOS duty-status colors — one per ELD grid row, used consistently
+     across the log sheet, route stops, and legend. */
+  --status-off: var(--surface-500);
+  --status-sleeper: var(--navy-600);
+  --status-driving: var(--accent-500);
+  --status-on-duty: var(--warning-500);
+
+  /* ---------------------------------------------------------------------
+     Semantic aliases (theme-swappable — see prefers-color-scheme below)
+  --------------------------------------------------------------------- */
+  --color-bg: var(--surface-50);
+  --color-surface: var(--surface-0);
+  --color-surface-raised: var(--surface-0);
+  --color-border: var(--surface-200);
+  --color-border-strong: var(--surface-300);
+  --color-text: var(--ink-700);
+  --color-text-strong: var(--ink-900);
+  --color-text-muted: var(--ink-500);
+  --color-text-faint: var(--ink-400);
+  --color-primary: var(--navy-700);
+  --color-primary-strong: var(--navy-800);
+  --color-accent: var(--accent-500);
+  --color-accent-strong: var(--accent-700);
+  --color-on-primary: var(--ink-inverse);
+  --color-on-accent: var(--ink-inverse);
+
+  /* ---------------------------------------------------------------------
+     Typography
+  --------------------------------------------------------------------- */
+  --font-sans:
+    "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --text-xs: 0.75rem; /* 12px — remarks, captions */
+  --text-sm: 0.875rem; /* 14px — labels, secondary body */
+  --text-base: 1rem; /* 16px — body */
+  --text-md: 1.125rem; /* 18px — emphasized body */
+  --text-lg: 1.375rem; /* 22px — card headings */
+  --text-xl: 1.75rem; /* 28px — section headings */
+  --text-2xl: 2.25rem; /* 36px — page headings / hero stats */
+
+  --leading-tight: 1.15;
+  --leading-snug: 1.35;
+  --leading-normal: 1.5;
+
+  --weight-regular: 400;
+  --weight-medium: 500;
+  --weight-semibold: 600;
+  --weight-bold: 700;
+
+  /* ---------------------------------------------------------------------
+     Spacing scale (4px base)
+  --------------------------------------------------------------------- */
+  --space-1: 0.25rem; /* 4 */
+  --space-2: 0.5rem; /* 8 */
+  --space-3: 0.75rem; /* 12 */
+  --space-4: 1rem; /* 16 */
+  --space-5: 1.25rem; /* 20 */
+  --space-6: 1.5rem; /* 24 */
+  --space-8: 2rem; /* 32 */
+  --space-10: 2.5rem; /* 40 */
+  --space-12: 3rem; /* 48 */
+  --space-16: 4rem; /* 64 */
+  --space-20: 5rem; /* 80 */
+
+  /* ---------------------------------------------------------------------
+     Radii — one locked scale. Buttons/inputs: sm/md. Cards/panels: lg.
+     Pills/badges: full.
+  --------------------------------------------------------------------- */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-full: 999px;
+
+  /* ---------------------------------------------------------------------
+     Shadows — tinted to navy (rgb(27 42 94)), never neutral/pure black.
+  --------------------------------------------------------------------- */
+  --shadow-sm:
+    0 1px 2px rgb(27 42 94 / 6%),
+    0 1px 1px rgb(27 42 94 / 4%);
+  --shadow-md:
+    0 4px 10px rgb(27 42 94 / 10%),
+    0 2px 4px rgb(27 42 94 / 6%);
+  --shadow-lg:
+    0 12px 30px rgb(27 42 94 / 14%),
+    0 4px 10px rgb(27 42 94 / 8%);
+
+  /* ---------------------------------------------------------------------
+     Focus ring — accent-based, visible on both light and dark surfaces.
+  --------------------------------------------------------------------- */
+  --focus-ring-color: var(--accent-500);
+  --focus-ring: 0 0 0 3px rgb(47 111 237 / 35%);
+  --focus-ring-width: 2px;
+  --focus-ring-offset: 2px;
+
+  /* ---------------------------------------------------------------------
+     Motion — durations + easings. Used for the GSAP log-sheet stroke
+     draw-in and general UI transitions.
+  --------------------------------------------------------------------- */
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 360ms;
+  --duration-slower: 600ms;
+  --duration-draw: 900ms; /* SVG log-sheet stroke-dashoffset draw-in */
+
+  --ease-standard: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-out: cubic-bezier(0, 0, 0.2, 1);
+  --ease-in: cubic-bezier(0.4, 0, 1, 1);
+
+  /* ---------------------------------------------------------------------
+     Z-index scale
+  --------------------------------------------------------------------- */
+  --z-base: 0;
+  --z-map-overlay: 10;
+  --z-sticky-nav: 20;
+  --z-dropdown: 30;
+  --z-modal: 40;
+  --z-toast: 50;
+
+  color-scheme: light dark;
+}
+
+/* ---------------------------------------------------------------------
+   Dark mode — same brand hues, remapped surface/ink ramp. No pure black.
+--------------------------------------------------------------------- */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: var(--surface-900);
+    --color-surface: var(--surface-800);
+    --color-surface-raised: var(--surface-700);
+    --color-border: var(--surface-700);
+    --color-border-strong: var(--surface-600);
+    --color-text: var(--surface-100);
+    --color-text-strong: #ffffff;
+    --color-text-muted: var(--surface-400);
+    --color-text-faint: var(--surface-500);
+
+    --color-primary: var(--accent-400);
+    --color-primary-strong: var(--accent-200);
+    --color-accent: var(--accent-400);
+    --color-accent-strong: var(--accent-200);
+    --color-on-primary: var(--navy-900);
+    --color-on-accent: var(--navy-900);
+
+    --status-off: var(--surface-400);
+    --status-sleeper: var(--accent-200);
+    --status-driving: var(--accent-400);
+    --status-on-duty: #dba64a;
+
+    --shadow-sm:
+      0 1px 2px rgb(0 0 0 / 30%),
+      0 1px 1px rgb(0 0 0 / 20%);
+    --shadow-md:
+      0 4px 10px rgb(0 0 0 / 36%),
+      0 2px 4px rgb(0 0 0 / 24%);
+    --shadow-lg:
+      0 12px 30px rgb(0 0 0 / 44%),
+      0 4px 10px rgb(0 0 0 / 28%);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Global element defaults
+--------------------------------------------------------------------- */
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  font-weight: var(--weight-regular);
+  color: var(--color-text);
+  background: var(--color-bg);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1,
+h2,
+h3,
+h4 {
+  margin: 0;
+  color: var(--color-text-strong);
+  font-weight: var(--weight-semibold);
+  line-height: var(--leading-tight);
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: var(--color-accent);
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+/* Consistent, accessible focus treatment for all interactive elements. */
+:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: var(--focus-ring-offset);
+}
+
+/* ---------------------------------------------------------------------
+   Utilities
+--------------------------------------------------------------------- */
+
+/* Numeric figures (miles, hours, minutes, HOS totals, clock times) always
+   render with tabular (fixed-width) digits so stacked numbers align. */
+.num {
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

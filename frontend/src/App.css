@@ -1,0 +1,160 @@
+.app-shell {
+  display: flex;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-10) var(--space-4) var(--space-16);
+  background: var(--color-bg);
+}
+
+/* ---------------------------------------------------------------------
+   Header - product name + one-line tagline. Page shell for Tasks 14-16.
+--------------------------------------------------------------------- */
+.app-header {
+  width: 100%;
+  max-width: 640px;
+}
+
+.app-header__title {
+  font-size: var(--text-2xl);
+}
+
+.app-header__tagline {
+  margin-top: var(--space-2);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.app-main {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+/* ---------------------------------------------------------------------
+   Retry banner - shown for 502 / network failures, dismissible.
+--------------------------------------------------------------------- */
+.app-banner {
+  display: flex;
+  width: 100%;
+  max-width: 640px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--danger-100);
+  border: 1px solid var(--danger-500);
+  border-radius: var(--radius-md);
+  color: var(--danger-700);
+}
+
+.app-banner__text {
+  font-size: var(--text-sm);
+}
+
+.app-banner__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-banner__retry {
+  padding: var(--space-2) var(--space-4);
+  background: var(--danger-700);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--ink-inverse);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-standard);
+}
+
+.app-banner__retry:hover {
+  background: var(--danger-500);
+}
+
+.app-banner__dismiss {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--danger-700);
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------
+   Results dashboard - stat cards -> route map -> day tabs/log sheet.
+   Wider than the form/banner column (640px) since the map and log sheet
+   both want the room; the form and banner stay narrow and centered above.
+--------------------------------------------------------------------- */
+.app-dashboard {
+  display: flex;
+  width: 100%;
+  max-width: 1040px;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+/* ---------------------------------------------------------------------
+   Empty state - shown before the first submission (and while idle).
+--------------------------------------------------------------------- */
+.app-empty {
+  display: flex;
+  width: 100%;
+  max-width: 640px;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-10) var(--space-6);
+  background: var(--color-surface);
+  border: 1px dashed var(--color-border-strong);
+  border-radius: var(--radius-lg);
+  text-align: center;
+}
+
+.app-empty__icon {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: var(--space-2);
+  color: var(--color-text-faint);
+}
+
+.app-empty__icon svg {
+  width: 100%;
+  height: 100%;
+}
+
+.app-empty__title {
+  font-size: var(--text-md);
+  font-weight: var(--weight-semibold);
+  color: var(--color-text-strong);
+}
+
+.app-empty__sub {
+  max-width: 440px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: var(--space-8) var(--space-4) var(--space-12);
+  }
+
+  .app-empty {
+    padding: var(--space-8) var(--space-4);
+  }
+}

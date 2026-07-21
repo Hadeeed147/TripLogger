@@ -8,6 +8,8 @@ __pycache__/
 *.pyc
 db.sqlite3
 .env
+backend/staticfiles/*
+!backend/staticfiles/.gitkeep
 
 # Node
 node_modules/
