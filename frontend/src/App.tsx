@@ -6,6 +6,7 @@ import LogSheet from "./components/LogSheet/LogSheet";
 import TripSummary from "./components/TripSummary/TripSummary";
 import DayTabs from "./components/DayTabs/DayTabs";
 import LoadingSteps from "./components/LoadingSteps";
+import ThemeToggle from "./components/ThemeToggle";
 import { ApiError, planTrip } from "./api/client";
 import type { DayLogDto, TripPlan, TripRequest } from "./api/types";
 
@@ -99,10 +100,13 @@ function TripPlannerApp() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <h1 className="app-header__title">TripLogger</h1>
-        <p className="app-header__tagline">
-          Plan FMCSA-compliant routes and hours-of-service logs for any trip.
-        </p>
+        <div className="app-header__text">
+          <h1 className="app-header__title">TripLogger</h1>
+          <p className="app-header__tagline">
+            Plan FMCSA-compliant routes and hours-of-service logs for any trip.
+          </p>
+        </div>
+        <ThemeToggle />
       </header>
 
       <main className="app-main">
@@ -259,8 +263,11 @@ function DevDashboardPreview() {
   return (
     <div className="app-shell">
       <header className="app-header">
-        <h1 className="app-header__title">TripLogger</h1>
-        <p className="app-header__tagline">Dashboard dev preview - variant: {variant}</p>
+        <div className="app-header__text">
+          <h1 className="app-header__title">TripLogger</h1>
+          <p className="app-header__tagline">Dashboard dev preview - variant: {variant}</p>
+        </div>
+        <ThemeToggle />
       </header>
       <main className="app-main">
         <LoadingSteps active={loading} />
