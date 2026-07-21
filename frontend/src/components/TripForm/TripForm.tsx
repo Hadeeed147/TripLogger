@@ -233,11 +233,15 @@ export default function TripForm({ onSubmit, loading, fieldError }: TripFormProp
       current_cycle_used: Number(values.current_cycle_used),
     };
 
+    // The datetime-local input value ("YYYY-MM-DDTHH:mm") is naive
+    // home-terminal wall-clock time, not a timezone-aware instant. Sending
+    // it through `new Date(...).toISOString()` would convert it to UTC
+    // using the browser's local offset, shifting the planned timeline by
+    // that offset once the backend strips tzinfo. Send it as-is (with
+    // seconds appended) so the engine plans from the same wall-clock time
+    // the user picked.
     if (departureOpen && departureTime) {
-      const parsed = new Date(departureTime);
-      if (!Number.isNaN(parsed.getTime())) {
-        req.departure_time = parsed.toISOString();
-      }
+      req.departure_time = `${departureTime}:00`;
     }
 
     onSubmit(req);
