@@ -28,6 +28,35 @@ function FitBounds({ geometry }: { geometry: LatLngTuple[] }) {
   return null;
 }
 
+/**
+ * Wheel zoom is off by default (see MapContainer below) so a page scroll
+ * that happens to pass over the map - which sits mid-page between the stat
+ * cards and the day tabs/log sheet - scrolls the page instead of getting
+ * captured as a map zoom. Clicking into the map re-enables wheel zoom for
+ * as long as the cursor stays over it, so the map is still fully scroll-
+ * zoomable once a user has deliberately engaged with it; moving the mouse
+ * back off the map disables it again.
+ */
+function ClickToEnableScrollZoom() {
+  const map = useMap();
+
+  useEffect(() => {
+    const enable = () => map.scrollWheelZoom.enable();
+    const disable = () => map.scrollWheelZoom.disable();
+    const container = map.getContainer();
+
+    map.on("click", enable);
+    container.addEventListener("mouseleave", disable);
+
+    return () => {
+      map.off("click", enable);
+      container.removeEventListener("mouseleave", disable);
+    };
+  }, [map]);
+
+  return null;
+}
+
 export default function RouteMap({ plan }: RouteMapProps) {
   const geometry = plan.route.geometry as LatLngTuple[];
 
@@ -44,7 +73,7 @@ export default function RouteMap({ plan }: RouteMapProps) {
 
   return (
     <div className="route-map">
-      <MapContainer center={center} zoom={6} scrollWheelZoom className="route-map__container">
+      <MapContainer center={center} zoom={6} scrollWheelZoom={false} className="route-map__container">
         <TileLayer
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -87,6 +116,7 @@ export default function RouteMap({ plan }: RouteMapProps) {
         ))}
 
         <FitBounds geometry={geometry} />
+        <ClickToEnableScrollZoom />
       </MapContainer>
     </div>
   );
