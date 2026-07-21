@@ -104,3 +104,49 @@ def test_fuel_stop_satisfies_30min_break():
     fuel_idx = next(i for i, s in enumerate(tl.segments) if s.label == "Fuel stop")
     tail = tl.segments[fuel_idx + 1:]
     assert all(s.label != "30-min break" for s in tail)
+
+def test_cycle_69_forces_restart_before_driving():
+    tl = plan_trip([Leg(0, 0), Leg(60, 60)], 69.0, START)
+    # pickup consumes the last hour of cycle; restart precedes any driving
+    assert statuses(tl) == [
+        (DutyStatus.ON_DUTY, 60),
+        (DutyStatus.OFF, 2040),
+        (DutyStatus.DRIVING, 60),
+        (DutyStatus.ON_DUTY, 60),
+    ]
+    assert tl.restart_inserted is True
+    assert tl.segments[1].label == "34-hour restart"
+
+def test_cycle_70_restarts_immediately():
+    tl = plan_trip([Leg(60, 60), Leg(0, 0)], 70.0, START)
+    assert tl.segments[0].label == "34-hour restart"
+
+def test_cycle_0_no_restart_on_long_trip():
+    tl = plan_trip([Leg(0, 0), Leg(2000, 2000)], 0.0, START)
+    assert tl.restart_inserted is False
+
+def test_timeline_invariants_across_scenarios():
+    scenarios = [
+        ([Leg(60, 60), Leg(120, 120)], 0.0),
+        ([Leg(0, 0), Leg(550, 600)], 0.0),
+        ([Leg(0, 0), Leg(2789, 3043)], 12.5),   # ~LA->NY at 55mph
+        ([Leg(300, 327), Leg(2400, 2618)], 45.0),
+        ([Leg(0, 0), Leg(60, 60)], 69.5),
+    ]
+    for legs, cycle in scenarios:
+        tl = plan_trip(legs, cycle, START)
+        segs = tl.segments
+        # contiguous, non-overlapping, positive
+        for a, b in zip(segs, segs[1:]):
+            assert a.end == b.start
+        assert all(s.minutes > 0 for s in segs)
+        # miles conserved
+        assert abs(sum(s.miles for s in segs) - sum(l.miles for l in legs)) < 0.01
+        # no driving stretch violates 11h without an intervening rest
+        drive_acc = 0.0
+        for s in segs:
+            if s.status == DutyStatus.DRIVING:
+                drive_acc += s.minutes
+                assert drive_acc <= 660.0 + 1e-6
+            elif s.label in ("10-hour rest", "34-hour restart"):
+                drive_acc = 0.0
