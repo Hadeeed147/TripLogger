@@ -58,6 +58,13 @@ function xAt(minute: number): number {
  *  close together in time (e.g. a break followed by resuming driving). */
 const MIN_LABEL_GAP = 60;
 
+/** A short "flag pole" tick at the very top of the remarks band, below the
+ *  grid's bottom border - constant for every remark. Labels all start from
+ *  this same y so every one gets the full band height to extend into
+ *  (see layoutRemarks doc below for why a shared y, not an alternating
+ *  one, is what makes the down-right direction work). */
+const REMARK_TICK_BOTTOM = REMARKS_TOP + 8;
+
 interface RemarkLayout {
   remark: RemarkDto;
   /** True clock position - the tick always lands here, unmoved. */
@@ -69,19 +76,25 @@ interface RemarkLayout {
 }
 
 /**
- * Lays out remark ticks + labels: the tick marks stay at their true time
+ * Lays out remark ticks + labels. The tick marks stay at their true time
  * (accuracy matters - graders check remarks line up with the log), but
  * label start-x is greedily nudged rightward when two remarks are closer
  * together than a rotated label needs, so text never collides. A short
  * horizontal leader connects a nudged label back to its true tick.
- * Vertical baseline also alternates (even/odd) as a second, independent
- * de-collision axis for dense clusters.
+ *
+ * All labels share the same tickBottom (start high, right under the grid's
+ * bottom border) and text is rotated 45deg down-right into the band below -
+ * this keeps the diagonals perfectly parallel, so any horizontal separation
+ * at all guarantees they never cross (two parallel lines never intersect),
+ * and every label gets the full remaining band height to extend into
+ * (rather than splitting that height across two alternating baselines,
+ * which is what made the old up-right version cramped).
  */
 function layoutRemarks(remarks: RemarkDto[]): RemarkLayout[] {
-  const withX = remarks.map((remark, i) => ({
+  const withX = remarks.map((remark) => ({
     remark,
     tickX: xAt(remark.time_min),
-    tickBottom: REMARKS_TOP + (i % 2 === 0 ? 18 : 52),
+    tickBottom: REMARK_TICK_BOTTOM,
   }));
 
   const byX = [...withX].sort((a, b) => a.tickX - b.tickX);
@@ -289,9 +302,14 @@ export default function LogSheet({ day, date }: LogSheetProps) {
         </g>
 
         {/* -----------------------------------------------------------
-            Remarks band - a tick + 45deg city/state + note at each
-            remark's clock position, staggered across two baselines so
-            clustered remarks don't collide.
+            Remarks band - a short tick just below the grid at each
+            remark's clock position, with the city/state + note rotated
+            45deg DOWN-RIGHT into the band's empty space below (matching
+            the official FMCSA completed-grid sample - the annotation
+            lives inside the remarks section, never crossing back up into
+            the duty rows). Labels that land close together in time are
+            spread out horizontally (see layoutRemarks) so they stay
+            parallel and never collide.
         ----------------------------------------------------------- */}
         <g className="logsheet-remarks">
           <text x={0} y={REMARKS_TOP - 8} className="logsheet-caption">
@@ -321,8 +339,9 @@ export default function LogSheet({ day, date }: LogSheetProps) {
               <text
                 x={labelX + 4}
                 y={tickBottom + 2}
+                textAnchor="start"
                 className="logsheet-remark-label"
-                transform={`rotate(-45 ${labelX + 4} ${tickBottom + 2})`}
+                transform={`rotate(45 ${labelX + 4} ${tickBottom + 2})`}
               >
                 {remark.city_state}
                 {remark.note ? ` - ${remark.note}` : ""}
