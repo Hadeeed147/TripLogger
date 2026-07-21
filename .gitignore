@@ -1,0 +1,19 @@
+# Python
+Lib/
+Scripts/
+Include/
+pyvenv.cfg
+.venv/
+__pycache__/
+*.pyc
+db.sqlite3
+.env
+
+# Node
+node_modules/
+dist/
+
+# Misc
+.claude/
+.agents/
+skills-lock.json
