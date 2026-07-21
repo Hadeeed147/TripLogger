@@ -1,0 +1,345 @@
+/*
+  TripForm - trip input card.
+  Structural baselines checked against 21st.dev (originui "Input" with
+  end/inline icon, cnippet.dev "Button" loading state): label-above-input
+  with an inline leading icon inside a bordered control, and a submit
+  button whose loading state swaps in an inline spinner + relabels itself
+  rather than disabling silently. Restyled entirely with TripLogger tokens
+  below (no library CSS pulled in) - only the structural shape carried over.
+*/
+
+.trip-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+  width: 100%;
+  max-width: 640px;
+  padding: var(--space-8);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-md);
+}
+
+.trip-form__row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-5) var(--space-4);
+}
+
+/* ---------------------------------------------------------------------
+   Text field - label above, icon inline inside the bordered control.
+--------------------------------------------------------------------- */
+.trip-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.trip-field__label {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--color-text-strong);
+}
+
+.trip-field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.trip-field__control:hover {
+  border-color: var(--color-border-strong);
+}
+
+.trip-field__control:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: var(--focus-ring);
+}
+
+.trip-field__icon {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  color: var(--color-text-muted);
+}
+
+.trip-field__control:focus-within .trip-field__icon {
+  color: var(--color-accent);
+}
+
+.trip-field__input {
+  flex: 1;
+  min-width: 0;
+  padding-block: var(--space-3);
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+
+.trip-field__input::placeholder {
+  color: var(--color-text-faint);
+}
+
+.trip-field__error {
+  font-size: var(--text-xs);
+  color: var(--danger-700);
+}
+
+/* ---------------------------------------------------------------------
+   Cycle-used field - number input with an "hrs" suffix, right-aligned.
+--------------------------------------------------------------------- */
+.trip-field--cycle {
+  max-width: 220px;
+}
+
+.trip-cycle-control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-inline: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.trip-cycle-control:hover {
+  border-color: var(--color-border-strong);
+}
+
+.trip-cycle-control:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: var(--focus-ring);
+}
+
+.trip-cycle-control__input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  padding-block: var(--space-3);
+  background: transparent;
+  border: none;
+  outline: none;
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+
+.trip-cycle-control__suffix {
+  flex-shrink: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------------
+   Departure time - collapsible section, closed by default.
+--------------------------------------------------------------------- */
+.trip-departure {
+  display: flex;
+  flex-direction: column;
+}
+
+.trip-departure__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  width: 100%;
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text);
+  text-align: left;
+  cursor: pointer;
+  transition: border-color var(--duration-base) var(--ease-standard);
+}
+
+.trip-departure__toggle:hover {
+  border-color: var(--color-border-strong);
+}
+
+.trip-departure__chevron {
+  display: inline-flex;
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  color: var(--color-text-muted);
+  transition: transform var(--duration-base) var(--ease-standard);
+}
+
+.trip-departure__chevron--open {
+  transform: rotate(180deg);
+}
+
+.trip-departure__label {
+  font-weight: var(--weight-medium);
+}
+
+.trip-departure__hint {
+  margin-left: auto;
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+
+.trip-departure__panel {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+  padding: var(--space-4);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  animation: trip-panel-in var(--duration-slow) var(--ease-standard);
+}
+
+.trip-departure__input {
+  width: 100%;
+  max-width: 280px;
+  padding: var(--space-3);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.trip-departure__input:hover {
+  border-color: var(--color-border-strong);
+}
+
+.trip-departure__input:focus-visible {
+  border-color: var(--color-accent);
+  box-shadow: var(--focus-ring);
+  outline: none;
+}
+
+@keyframes trip-panel-in {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Submit button - accent fill, hover/active/disabled/loading states.
+--------------------------------------------------------------------- */
+.trip-submit {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-4) var(--space-6);
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-md);
+  color: var(--color-on-accent);
+  font-size: var(--text-base);
+  font-weight: var(--weight-semibold);
+  cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.trip-submit:hover:not(:disabled) {
+  background: var(--color-accent-strong);
+  box-shadow: var(--shadow-md);
+}
+
+.trip-submit:active:not(:disabled) {
+  transform: translateY(1px) scale(0.99);
+  box-shadow: var(--shadow-sm);
+}
+
+.trip-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.65;
+  box-shadow: none;
+}
+
+.trip-submit__spinner {
+  display: inline-flex;
+  width: 18px;
+  height: 18px;
+}
+
+.trip-spinner-icon {
+  width: 100%;
+  height: 100%;
+  animation: trip-spin 0.85s linear infinite;
+}
+
+@keyframes trip-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Field error state - applied as a modifier alongside the control
+   classes above, so it must win the cascade by appearing after them.
+--------------------------------------------------------------------- */
+.trip-field__control--error {
+  border-color: var(--danger-500);
+}
+
+.trip-field__control--error:focus-within {
+  border-color: var(--danger-500);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--danger-500) 30%, transparent);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trip-departure__panel {
+    animation: none;
+  }
+
+  .trip-spinner-icon {
+    animation-duration: 1.6s;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   Mobile collapse.
+--------------------------------------------------------------------- */
+@media (max-width: 640px) {
+  .trip-form {
+    padding: var(--space-6);
+    border-radius: var(--radius-md);
+  }
+
+  .trip-form__row {
+    grid-template-columns: 1fr;
+  }
+
+  .trip-field--cycle {
+    max-width: none;
+  }
+
+  .trip-departure__hint {
+    display: none;
+  }
+}
