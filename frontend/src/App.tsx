@@ -1,6 +1,6 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import "./App.css";
-import TripForm, { type TripFormFieldError } from "./components/TripForm/TripForm";
+import TripForm, { type TripFormFieldError, type TripFormHandle } from "./components/TripForm/TripForm";
 import RouteMap from "./components/RouteMap/RouteMap";
 import LogSheet from "./components/LogSheet/LogSheet";
 import TripSummary from "./components/TripSummary/TripSummary";
@@ -9,6 +9,7 @@ import LoadingSteps from "./components/LoadingSteps";
 import ThemeToggle from "./components/ThemeToggle";
 import { ApiError, planTrip } from "./api/client";
 import type { DayLogDto, TripPlan, TripRequest } from "./api/types";
+import { EXAMPLE_TRIPS, type ExampleTrip } from "./data/exampleTrips";
 
 // Dev-only preview: visiting the app at #map renders RouteMap against a
 // fake TripPlan fixture instead of the real form/results flow, so the map
@@ -59,6 +60,11 @@ function TripPlannerApp() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<AppError | null>(null);
   const [lastRequest, setLastRequest] = useState<TripRequest | null>(null);
+  const tripFormRef = useRef<TripFormHandle>(null);
+
+  const handleSelectExample = useCallback((trip: ExampleTrip) => {
+    tripFormRef.current?.fillExample(trip);
+  }, []);
 
   const submit = useCallback(async (req: TripRequest) => {
     setLastRequest(req);
@@ -129,11 +135,15 @@ function TripPlannerApp() {
           </div>
         )}
 
-        <TripForm onSubmit={submit} loading={loading} fieldError={fieldError} />
+        <TripForm ref={tripFormRef} onSubmit={submit} loading={loading} fieldError={fieldError} />
 
         <LoadingSteps active={loading} />
 
-        {plan ? <ResultsDashboard plan={plan} /> : !loading && <EmptyState />}
+        {plan ? (
+          <ResultsDashboard plan={plan} />
+        ) : (
+          !loading && <EmptyState onSelectExample={handleSelectExample} />
+        )}
       </main>
     </div>
   );
@@ -160,8 +170,11 @@ function ResultsDashboard({ plan }: { plan: TripPlan }) {
 /**
  * First-run hint panel, shown before any plan has been submitted (and while
  * not currently loading) so the page under the form isn't just blank.
+ * `onSelectExample` (optional - the dev dashboard preview below has no live
+ * TripForm to fill) wires the example-trip chips to TripForm's imperative
+ * fillExample() ref method.
  */
-function EmptyState() {
+function EmptyState({ onSelectExample }: { onSelectExample?: (trip: ExampleTrip) => void }) {
   return (
     <div className="app-empty">
       <span className="app-empty__icon" aria-hidden="true">
@@ -174,6 +187,20 @@ function EmptyState() {
         Fill in the current, pickup, and dropoff locations above and TripLogger will map the route and build
         FMCSA-compliant driver&apos;s daily logs for every day of the trip.
       </p>
+      {onSelectExample && (
+        <div className="app-empty__chips" role="group" aria-label="Example trips">
+          {EXAMPLE_TRIPS.map((trip) => (
+            <button
+              key={trip.id}
+              type="button"
+              className="example-chip"
+              onClick={() => onSelectExample(trip)}
+            >
+              {trip.label}
+            </button>
+          ))}
+        </div>
+      )}
     </div>
   );
 }

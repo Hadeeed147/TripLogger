@@ -100,51 +100,9 @@
 }
 
 /* ---------------------------------------------------------------------
-   Cycle-used field - number input with an "hrs" suffix, right-aligned.
+   Cycle-used field styling lives in CycleUsedField.css (Polish C) - it
+   reuses .trip-field__label and .trip-field__control--error from here.
 --------------------------------------------------------------------- */
-.trip-field--cycle {
-  max-width: 220px;
-}
-
-.trip-cycle-control {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  padding-inline: var(--space-3);
-  background: var(--color-surface);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-md);
-  transition:
-    border-color var(--duration-base) var(--ease-standard),
-    box-shadow var(--duration-base) var(--ease-standard);
-}
-
-.trip-cycle-control:hover {
-  border-color: var(--color-border-strong);
-}
-
-.trip-cycle-control:focus-within {
-  border-color: var(--color-accent);
-  box-shadow: var(--focus-ring);
-}
-
-.trip-cycle-control__input {
-  flex: 1;
-  width: 100%;
-  min-width: 0;
-  padding-block: var(--space-3);
-  background: transparent;
-  border: none;
-  outline: none;
-  font-size: var(--text-base);
-  color: var(--color-text);
-}
-
-.trip-cycle-control__suffix {
-  flex-shrink: 0;
-  font-size: var(--text-sm);
-  color: var(--color-text-muted);
-}
 
 /* ---------------------------------------------------------------------
    Departure time - collapsible section, closed by default.
@@ -333,10 +291,6 @@
 
   .trip-form__row {
     grid-template-columns: 1fr;
-  }
-
-  .trip-field--cycle {
-    max-width: none;
   }
 
   .trip-departure__hint {
