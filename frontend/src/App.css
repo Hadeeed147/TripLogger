@@ -1,4 +1,127 @@
 .app-shell {
+  display: flex;
   min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-8);
+  padding: var(--space-10) var(--space-4) var(--space-16);
   background: var(--color-bg);
+}
+
+/* ---------------------------------------------------------------------
+   Header - product name + one-line tagline. Page shell for Tasks 14-16.
+--------------------------------------------------------------------- */
+.app-header {
+  width: 100%;
+  max-width: 640px;
+}
+
+.app-header__title {
+  font-size: var(--text-2xl);
+}
+
+.app-header__tagline {
+  margin-top: var(--space-2);
+  font-size: var(--text-md);
+  color: var(--color-text-muted);
+}
+
+.app-main {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+/* ---------------------------------------------------------------------
+   Retry banner - shown for 502 / network failures, dismissible.
+--------------------------------------------------------------------- */
+.app-banner {
+  display: flex;
+  width: 100%;
+  max-width: 640px;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  background: var(--danger-100);
+  border: 1px solid var(--danger-500);
+  border-radius: var(--radius-md);
+  color: var(--danger-700);
+}
+
+.app-banner__text {
+  font-size: var(--text-sm);
+}
+
+.app-banner__actions {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.app-banner__retry {
+  padding: var(--space-2) var(--space-4);
+  background: var(--danger-700);
+  border: none;
+  border-radius: var(--radius-sm);
+  color: var(--ink-inverse);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition: background-color var(--duration-base) var(--ease-standard);
+}
+
+.app-banner__retry:hover {
+  background: var(--danger-500);
+}
+
+.app-banner__dismiss {
+  display: inline-flex;
+  width: 24px;
+  height: 24px;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  color: var(--danger-700);
+  font-size: var(--text-lg);
+  line-height: 1;
+  cursor: pointer;
+}
+
+/* ---------------------------------------------------------------------
+   Results placeholder - Task 16 replaces this with the full dashboard.
+--------------------------------------------------------------------- */
+.app-results {
+  width: 100%;
+  max-width: 640px;
+  padding: var(--space-6);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+.app-results__title {
+  margin-bottom: var(--space-3);
+  font-size: var(--text-lg);
+}
+
+.app-results__json {
+  margin: 0;
+  padding: var(--space-4);
+  overflow-x: auto;
+  background: var(--color-bg);
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+@media (max-width: 640px) {
+  .app-shell {
+    padding: var(--space-8) var(--space-4) var(--space-12);
+  }
 }
