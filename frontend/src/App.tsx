@@ -2,14 +2,19 @@ import { useCallback, useEffect, useState } from "react";
 import "./App.css";
 import TripForm, { type TripFormFieldError } from "./components/TripForm/TripForm";
 import RouteMap from "./components/RouteMap/RouteMap";
+import LogSheet from "./components/LogSheet/LogSheet";
 import { ApiError, planTrip } from "./api/client";
-import type { TripPlan, TripRequest } from "./api/types";
+import type { DayLogDto, TripPlan, TripRequest } from "./api/types";
 
 // Dev-only preview: visiting the app at #map renders RouteMap against a
 // fake TripPlan fixture instead of the real form/results flow, so the map
 // can be exercised without a backend call. Inert in production builds
 // (import.meta.env.DEV is false) and invisible unless the hash is set.
 const isDevMapPreview = import.meta.env.DEV && window.location.hash === "#map";
+
+// Same pattern, for LogSheet: visiting the app at #log renders a 3-day
+// stack of log sheets against fake DayLogDto fixtures.
+const isDevLogPreview = import.meta.env.DEV && window.location.hash === "#log";
 
 // App owns the ApiError from the last failed submission and decides how to
 // surface it: a `field` error highlights the matching TripForm input, while
@@ -23,6 +28,9 @@ interface AppError {
 function App() {
   if (isDevMapPreview) {
     return <DevMapPreview />;
+  }
+  if (isDevLogPreview) {
+    return <DevLogPreview />;
   }
 
   return <TripPlannerApp />;
@@ -129,6 +137,26 @@ function DevMapPreview() {
   return (
     <div style={{ padding: "2rem" }}>
       <RouteMap plan={plan} />
+    </div>
+  );
+}
+
+// Dynamically imported so the fixture never lands in the production bundle,
+// same rationale as DevMapPreview above.
+function DevLogPreview() {
+  const [logs, setLogs] = useState<DayLogDto[] | null>(null);
+
+  useEffect(() => {
+    void import("./dev/fakeDayLogs").then((mod) => setLogs(mod.fakeDayLogs));
+  }, []);
+
+  if (!logs) return null;
+
+  return (
+    <div style={{ padding: "2rem", display: "flex", flexDirection: "column", gap: "2rem" }}>
+      {logs.map((day) => (
+        <LogSheet key={day.date} day={day} date={day.date} />
+      ))}
     </div>
   );
 }
