@@ -52,3 +52,35 @@ def test_pickup_resets_break_accumulator():
     # 7h drive, 1h pickup (resets the 8h accumulator), 7h drive: no break ever needed
     tl = plan_trip([Leg(420, 420), Leg(420, 420)], 0.0, START)
     assert all(s.label != "30-min break" for s in tl.segments)
+
+def test_rest_after_11h_driving_and_resume():
+    # pickup, 8h drive, break, 3h drive (11h cap), 10h rest, 40min drive, dropoff
+    tl = plan_trip([Leg(0, 0), Leg(700, 700)], 0.0, START)
+    assert statuses(tl) == [
+        (DutyStatus.ON_DUTY, 60),
+        (DutyStatus.DRIVING, 480),
+        (DutyStatus.OFF, 30),
+        (DutyStatus.DRIVING, 180),
+        (DutyStatus.SLEEPER, 600),
+        (DutyStatus.DRIVING, 40),
+        (DutyStatus.ON_DUTY, 60),
+    ]
+    assert tl.segments[4].label == "10-hour rest"
+
+def test_14h_window_blocks_driving():
+    # White-box: window nearly exhausted, plenty of drive hours left.
+    from trips.hos.engine import _Planner
+    p = _Planner(0.0, START)
+    p.shift_open = True
+    p.window_elapsed = 825.0  # 13h45m into window
+    p.drive_leg(Leg(100, 100))
+    assert (p.segments[0].status, round(p.segments[0].minutes)) == (DutyStatus.DRIVING, 15)
+    assert p.segments[1].label == "10-hour rest"
+
+def test_rest_resets_all_shift_accumulators():
+    tl = plan_trip([Leg(0, 0), Leg(1320, 1320)], 0.0, START)
+    # After first rest the driver gets a fresh 8h-before-break allowance
+    rest_idx = next(i for i, s in enumerate(tl.segments) if s.label == "10-hour rest")
+    post = tl.segments[rest_idx + 1]
+    assert post.status == DutyStatus.DRIVING
+    assert post.minutes > 300  # not immediately re-broken
