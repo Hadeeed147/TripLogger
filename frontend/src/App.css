@@ -115,6 +115,102 @@
 }
 
 /* ---------------------------------------------------------------------
+   Print affordance - a small header row above DayTabs holding the "Print
+   logs" button (secondary/outline treatment, matching --color-border-strong
+   buttons used elsewhere, e.g. .example-chip).
+--------------------------------------------------------------------- */
+.app-dashboard__logs-header {
+  display: flex;
+  width: 100%;
+  justify-content: flex-end;
+}
+
+.print-button {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    background-color var(--duration-base) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.print-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.print-button:hover {
+  border-color: var(--color-accent);
+  background: var(--color-bg);
+}
+
+.print-button:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+/* ---------------------------------------------------------------------
+   Print-only stacked log sheets - every day's LogSheet, one per page.
+   Hidden on screen (DayTabs already shows the active day there); shown only
+   under the @media print rules below.
+--------------------------------------------------------------------- */
+.app-print-logs {
+  display: none;
+}
+
+@media print {
+  .app-header,
+  .app-banner,
+  .trip-form,
+  .loading-steps,
+  .app-empty,
+  .trip-summary,
+  .trip-timeline,
+  .route-map,
+  .app-dashboard__logs-header,
+  .day-tabs__list,
+  .day-tabs__panel {
+    display: none !important;
+  }
+
+  .app-shell,
+  .app-main,
+  .app-dashboard {
+    display: block;
+    width: 100%;
+    max-width: none;
+    padding: 0;
+    margin: 0;
+    background: #fff;
+  }
+
+  .app-print-logs {
+    display: block;
+  }
+
+  .app-print-logs__page {
+    break-after: page;
+  }
+
+  .app-print-logs__page:last-child {
+    break-after: auto;
+  }
+
+  * {
+    print-color-adjust: exact;
+    -webkit-print-color-adjust: exact;
+  }
+}
+
+/* ---------------------------------------------------------------------
    Empty state - shown before the first submission (and while idle).
 --------------------------------------------------------------------- */
 .app-empty {
