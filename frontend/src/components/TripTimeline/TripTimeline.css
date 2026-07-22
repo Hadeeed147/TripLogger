@@ -107,10 +107,17 @@
 --------------------------------------------------------------------- */
 .trip-timeline__scroll {
   width: 100%;
+  /* Top gutter so the hover tooltip (which renders ABOVE its segment, i.e.
+     into negative chart-y) has room inside this scroll box instead of being
+     clipped by its top edge - overflow-x:auto forces overflow-y to a
+     clipping value, so anything escaping the box vertically is cut off. */
+  padding-top: 24px;
   overflow-x: auto;
   overflow-y: auto;
-  scroll-snap-type: x proximity;
   scrollbar-width: thin;
+  /* No scroll-snap: day-label snap points sit at each day's CENTER, not at
+     x=0, so proximity-snapping fought the user every time they scrolled back
+     to the origin (it yanked the view to the nearest day-label center). */
 }
 
 .trip-timeline__chart {
@@ -301,7 +308,6 @@
   white-space: nowrap;
   cursor: pointer;
   pointer-events: auto;
-  scroll-snap-align: start;
   transform: translateX(-50%);
   transition: color var(--duration-base) var(--ease-standard);
 }
