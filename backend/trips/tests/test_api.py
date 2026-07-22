@@ -1,6 +1,12 @@
 import pytest
 from rest_framework.test import APIClient
 
+
+def test_health_ok():
+    r = APIClient().get("/api/health")
+    assert r.status_code == 200
+    assert r.json() == {"status": "ok"}
+
 GEO = {
     "chicago, il": {"query": "Chicago, IL", "display_name": "Chicago, Illinois", "lat": 41.88, "lng": -87.63},
     "denver, co": {"query": "Denver, CO", "display_name": "Denver, Colorado", "lat": 39.74, "lng": -104.99},

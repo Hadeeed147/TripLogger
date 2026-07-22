@@ -1,7 +1,14 @@
 from __future__ import annotations
 
+from django.http import JsonResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
+
+def health(request):
+    """Cheap liveness check for uptime pingers - no external calls, so it
+    keeps a free-tier dyno awake without touching Nominatim/OSRM."""
+    return JsonResponse({"status": "ok"})
 
 from trips.hos.engine import TripTooLongError, plan_trip
 from trips.hos.logsheets import build_day_logs
