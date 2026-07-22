@@ -2,8 +2,10 @@
 
 A full-stack trip planner for property-carrying truck drivers: enter your current location, pickup, dropoff, and current HOS cycle used, and get back a compliant route plan plus FMCSA-style ELD daily log sheets — computed on the fly, no login, no persistence.
 
-**Live app:** <!-- LIVE_URL_FRONTEND --> *(deploy pending)*
-**Live API:** <!-- LIVE_URL_BACKEND --> *(deploy pending)*
+**Live app:** https://triplogger-hadeeed147s-projects.vercel.app
+**Live API:** https://triplogger-backend.onrender.com
+
+> The API runs on Render's free tier, which sleeps after ~15 minutes of inactivity. The first request after a nap takes ~50 seconds to wake the server; every request after that is immediate. An uptime pinger on `/api/health` keeps it warm.
 
 ## Screenshot
 
