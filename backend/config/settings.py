@@ -37,6 +37,13 @@ ALLOWED_HOSTS = [
     if host.strip()
 ]
 
+# Render provides the service's real external hostname at runtime; trust it
+# automatically so a deploy never 400s with DisallowedHost if the final URL
+# differs from whatever ALLOWED_HOSTS was set to.
+_render_host = os.environ.get('RENDER_EXTERNAL_HOSTNAME')
+if _render_host and _render_host not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(_render_host)
+
 
 # Application definition
 

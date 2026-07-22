@@ -4,7 +4,7 @@ services:
     runtime: python
     plan: free
     buildCommand: pip install -r backend/requirements.txt && python backend/manage.py collectstatic --noinput
-    startCommand: cd backend && gunicorn config.wsgi
+    startCommand: cd backend && gunicorn config.wsgi --bind 0.0.0.0:$PORT
     envVars:
       - key: SECRET_KEY
         generateValue: true
