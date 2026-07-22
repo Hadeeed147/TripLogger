@@ -63,6 +63,14 @@ interface RouteGlobeProps {
    *  WebGL context creation failed). Callers use this to swap in a
    *  non-WebGL fallback instead of an empty canvas. */
   onSupportChange?: (supported: boolean) => void;
+  /** Fires every animation frame with the globe's *current* (phi, theta) -
+   *  i.e. after drag/focus-easing/auto-spin have all been applied for that
+   *  frame, but before `globe.update()` paints it. Callers that need to
+   *  overlay HTML at a marker's live screen position (RouteTakeover's city
+   *  chips) use this plus `projectLocation` instead of re-deriving rotation
+   *  state themselves. Not needed for the common case (just showing the
+   *  globe) so it's optional and costs nothing when omitted. */
+  onFrame?: (phi: number, theta: number) => void;
 }
 
 function hexToRgb01(hex: string): [number, number, number] {
@@ -157,6 +165,44 @@ function angleDelta(from: number, to: number): number {
 }
 
 /**
+ * Orthographic (azimuthal) projection of a lat/lng onto the globe's *current*
+ * phi/theta rotation - the forward-projection counterpart of
+ * `locationToAngles` above, used to place HTML label chips over marker dots
+ * that track the live rotation frame-by-frame (RouteTakeover's city chips).
+ *
+ * Returns unit-sphere coordinates: `x`/`y` in roughly [-1, 1] (screen-space,
+ * not yet scaled by a radius or offset by a center), and `z` as the
+ * "facing-ness" of the point - `z` close to 1 means dead-center-front, `z`
+ * near 0 means at the silhouette edge, negative means on the far/hidden
+ * hemisphere (caller should hide the chip).
+ *
+ * Derived so that `projectLocation(lat, lng, ...locationToAngles(lat, lng))`
+ * always resolves to exactly `{ x: 0, y: 0, z: 1 }` - i.e. this is the exact
+ * algebraic inverse of `locationToAngles`, not an independent approximation,
+ * so a marker that RouteGlobe's `focus` prop has fully eased onto projects
+ * to dead-center by construction.
+ */
+export function projectLocation(
+  lat: number,
+  lng: number,
+  phi: number,
+  theta: number,
+): { x: number; y: number; z: number } {
+  const latRad = (lat * Math.PI) / 180;
+  const lngRad = (lng * Math.PI) / 180;
+  // The lat/lng currently facing the camera dead-on, given (phi, theta) -
+  // the algebraic inverse of locationToAngles's own (targetPhi, targetTheta).
+  const centerLat = theta;
+  const dLng = lngRad + phi + Math.PI / 2;
+  const x = Math.cos(latRad) * Math.sin(dLng);
+  const y =
+    Math.cos(centerLat) * Math.sin(latRad) - Math.sin(centerLat) * Math.cos(latRad) * Math.cos(dLng);
+  const z =
+    Math.sin(centerLat) * Math.sin(latRad) + Math.cos(centerLat) * Math.cos(latRad) * Math.cos(dLng);
+  return { x, y, z };
+}
+
+/**
  * Reusable WebGL globe (cobe) used as the hero visual for the loading state,
  * the post-submit route reveal, and the empty state. Themed from the design
  * tokens (dark-navy base + accent-blue glow/markers in dark mode, a paper-
@@ -192,6 +238,7 @@ export default function RouteGlobe({
   interactive = true,
   className,
   onSupportChange,
+  onFrame,
 }: RouteGlobeProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const phiRef = useRef(0);
@@ -203,6 +250,7 @@ export default function RouteGlobe({
   const arcHeightRef = useRef(arcHeight);
   const focusRef = useRef(focus);
   const interactiveRef = useRef(interactive);
+  const onFrameRef = useRef(onFrame);
   const [supported, setSupported] = useState(true);
 
   // Mirror the latest props into refs every render so the rAF loop (started
@@ -217,6 +265,21 @@ export default function RouteGlobe({
   arcHeightRef.current = arcHeight;
   focusRef.current = focus;
   interactiveRef.current = interactive;
+  onFrameRef.current = onFrame;
+
+  // Cursor affordance reacts to `interactive` on its own, independent of the
+  // canvas/GL-context effect below (which only reruns on `size` changes) -
+  // otherwise a caller that flips `interactive` after mount (RouteTakeover
+  // going from its non-interactive intro/ready phases into a fully
+  // draggable "explore" phase, with no `size` change involved) would keep
+  // showing a plain arrow cursor forever despite dragging having started
+  // working, since the pointer handlers below already read the *live*
+  // `interactiveRef` regardless.
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    canvas.style.cursor = interactive ? "grab" : "default";
+  }, [interactive]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -259,6 +322,8 @@ export default function RouteGlobe({
       } else if (!reduced) {
         phiRef.current += 0.0032 * speedRef.current;
       }
+
+      onFrameRef.current?.(phiRef.current, thetaRef.current);
 
       globe.update({
         phi: phiRef.current,
@@ -335,7 +400,10 @@ export default function RouteGlobe({
     canvas.addEventListener("pointerdown", onPointerDown);
     window.addEventListener("pointermove", onPointerMove);
     window.addEventListener("pointerup", onPointerUp);
-    canvas.style.cursor = interactive ? "grab" : "default";
+    // Initial cursor is set by the dedicated `[interactive]` effect above
+    // (which also handles it reactively thereafter) - not here, since this
+    // effect only reruns on `size` changes and would otherwise freeze the
+    // cursor at whatever `interactive` was when the GL context was built.
 
     // Re-create on theme flips (Polish B's ThemeToggle sets data-theme on
     // <html>) since cobe has no "update colors" API - colors are baked in

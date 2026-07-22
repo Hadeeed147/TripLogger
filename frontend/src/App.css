@@ -44,6 +44,23 @@
 }
 
 /* ---------------------------------------------------------------------
+   Dissolve wrapper (Polish J) - everything that should visually recede as
+   the full-page RouteTakeover overlay takes over: the form plus whatever
+   sits below it (empty-state hint or the previous dashboard, on a
+   resubmission). Mirrors `.app-main`'s own flex layout exactly, since this
+   just interposes a single animatable node between it and its former
+   direct children rather than changing the layout itself. GSAP (App.tsx)
+   drives opacity/scale/blur on this element directly.
+--------------------------------------------------------------------- */
+.app-dissolve {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-6);
+}
+
+/* ---------------------------------------------------------------------
    Retry banner - shown for 502 / network failures, dismissible.
 --------------------------------------------------------------------- */
 .app-banner {
@@ -171,6 +188,7 @@
   .app-banner,
   .trip-form,
   .loading-steps,
+  .route-takeover,
   .app-empty,
   .trip-summary,
   .trip-timeline,
