@@ -7,6 +7,7 @@ import RouteGlobe, {
   type GlobeArc,
   type GlobeMarker,
 } from "./RouteGlobe/RouteGlobe";
+import KineticGrid from "./KineticGrid/KineticGrid";
 import type { TripPlan } from "../api/types";
 import "./RouteTakeover.css";
 
@@ -450,82 +451,89 @@ export default function RouteTakeover({ plan, failed, onDone, onUnsupported }: R
 
   return (
     <div className="route-takeover" ref={containerRef} role="status" aria-live="polite">
-      <div
-        className="route-takeover__globe-wrap"
-        ref={globeWrapRef}
-        style={{ width: globeSize, height: globeSize }}
-      >
-        {globeSupported && (
-          <RouteGlobe
-            size={globeSize}
-            markers={markers}
-            arcs={arcs}
-            arcWidth={arcWidth}
-            arcHeight={arcHeight}
-            focus={focus}
-            interactive={subPhase === "explore"}
-            onFrame={handleFrame}
-            onSupportChange={(ok) => {
-              setGlobeSupported(ok);
-              if (!ok && !unsupportedFiredRef.current) {
-                unsupportedFiredRef.current = true;
-                onUnsupportedRef.current();
-              }
-            }}
-          />
+      {/* KineticGrid (Polish K) is this overlay's backdrop - behind the
+          globe/arcs/chips/caption/panel, filling the full takeover (see
+          `.route-takeover .route-takeover__grid` in RouteTakeover.css). Its
+          canvas is pointer-events: none, so Skip/Explore/View-details stay
+          fully clickable through it. */}
+      <KineticGrid className="route-takeover__grid" contentClassName="route-takeover__grid-content">
+        <div
+          className="route-takeover__globe-wrap"
+          ref={globeWrapRef}
+          style={{ width: globeSize, height: globeSize }}
+        >
+          {globeSupported && (
+            <RouteGlobe
+              size={globeSize}
+              markers={markers}
+              arcs={arcs}
+              arcWidth={arcWidth}
+              arcHeight={arcHeight}
+              focus={focus}
+              interactive={subPhase === "explore"}
+              onFrame={handleFrame}
+              onSupportChange={(ok) => {
+                setGlobeSupported(ok);
+                if (!ok && !unsupportedFiredRef.current) {
+                  unsupportedFiredRef.current = true;
+                  onUnsupportedRef.current();
+                }
+              }}
+            />
+          )}
+
+          {plan && (
+            <>
+              <MarkerChip variant="current" label={cityLabel(plan.locations.current.display_name)} setEl={(el) => { chipRefs.current.current = el; }} />
+              <MarkerChip variant="pickup" label={cityLabel(plan.locations.pickup.display_name)} setEl={(el) => { chipRefs.current.pickup = el; }} />
+              <MarkerChip variant="dropoff" label={cityLabel(plan.locations.dropoff.display_name)} setEl={(el) => { chipRefs.current.dropoff = el; }} />
+            </>
+          )}
+        </div>
+
+        {subPhase === "intro" && (
+          <button type="button" className="route-takeover__skip" onClick={() => finish()}>
+            Skip
+            <span aria-hidden="true">&rarr;</span>
+          </button>
         )}
 
-        {plan && (
-          <>
-            <MarkerChip variant="current" label={cityLabel(plan.locations.current.display_name)} setEl={(el) => { chipRefs.current.current = el; }} />
-            <MarkerChip variant="pickup" label={cityLabel(plan.locations.pickup.display_name)} setEl={(el) => { chipRefs.current.pickup = el; }} />
-            <MarkerChip variant="dropoff" label={cityLabel(plan.locations.dropoff.display_name)} setEl={(el) => { chipRefs.current.dropoff = el; }} />
-          </>
+        {captionText && <p className="route-takeover__caption">{captionText}</p>}
+
+        <div className="route-takeover__scrim" ref={scrimRef} aria-hidden="true" />
+
+        <div className="route-takeover__panel" ref={panelRef} aria-hidden={subPhase !== "ready"}>
+          {plan && routeSummary && (
+            <>
+              <h2 className="route-takeover__panel-title">Route planned</h2>
+              <p className="route-takeover__panel-summary">{routeSummary}</p>
+              <div className="route-takeover__panel-actions">
+                <button
+                  type="button"
+                  ref={primaryBtnRef}
+                  className="route-takeover__btn route-takeover__btn--primary"
+                  onClick={() => finish()}
+                >
+                  View trip details
+                </button>
+                <button
+                  type="button"
+                  className="route-takeover__btn route-takeover__btn--secondary"
+                  onClick={() => setSubPhase("explore")}
+                >
+                  Explore route
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+
+        {subPhase === "explore" && (
+          <button type="button" className="route-takeover__persist" onClick={() => finish()}>
+            View trip details
+          </button>
         )}
-      </div>
-
-      {subPhase === "intro" && (
-        <button type="button" className="route-takeover__skip" onClick={() => finish()}>
-          Skip
-          <span aria-hidden="true">&rarr;</span>
-        </button>
-      )}
-
-      {captionText && <p className="route-takeover__caption">{captionText}</p>}
-
-      <div className="route-takeover__scrim" ref={scrimRef} aria-hidden="true" />
-
-      <div className="route-takeover__panel" ref={panelRef} aria-hidden={subPhase !== "ready"}>
-        {plan && routeSummary && (
-          <>
-            <h2 className="route-takeover__panel-title">Route planned</h2>
-            <p className="route-takeover__panel-summary">{routeSummary}</p>
-            <div className="route-takeover__panel-actions">
-              <button
-                type="button"
-                ref={primaryBtnRef}
-                className="route-takeover__btn route-takeover__btn--primary"
-                onClick={() => finish()}
-              >
-                View trip details
-              </button>
-              <button
-                type="button"
-                className="route-takeover__btn route-takeover__btn--secondary"
-                onClick={() => setSubPhase("explore")}
-              >
-                Explore route
-              </button>
-            </div>
-          </>
-        )}
-      </div>
-
-      {subPhase === "explore" && (
-        <button type="button" className="route-takeover__persist" onClick={() => finish()}>
-          View trip details
-        </button>
-      )}
+      </KineticGrid>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import TripTimeline from "./components/TripTimeline/TripTimeline";
 import LoadingSteps from "./components/LoadingSteps";
 import RouteGlobe from "./components/RouteGlobe/RouteGlobe";
 import RouteTakeover from "./components/RouteTakeover";
+import KineticGrid from "./components/KineticGrid/KineticGrid";
 import ThemeToggle from "./components/ThemeToggle";
 import { ApiError, planTrip } from "./api/client";
 import type { DayLogDto, TripPlan, TripRequest } from "./api/types";
@@ -371,36 +372,42 @@ function EmptyState({ onSelectExample }: { onSelectExample?: (trip: ExampleTrip)
 
   return (
     <div className="app-empty">
-      {globeSupported ? (
-        <div className="app-empty__globe" aria-hidden="true">
-          <RouteGlobe size={200} onSupportChange={setGlobeSupported} />
-        </div>
-      ) : (
-        <span className="app-empty__icon" aria-hidden="true">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M3 12h4l2-7 4 14 2-7h6" />
-          </svg>
-        </span>
-      )}
-      <p className="app-empty__title">Plan a trip to see your route and daily logs</p>
-      <p className="app-empty__sub">
-        Fill in the current, pickup, and dropoff locations above and TripLogger will map the route and build
-        FMCSA-compliant driver&apos;s daily logs for every day of the trip.
-      </p>
-      {onSelectExample && (
-        <div className="app-empty__chips" role="group" aria-label="Example trips">
-          {EXAMPLE_TRIPS.map((trip) => (
-            <button
-              key={trip.id}
-              type="button"
-              className="example-chip"
-              onClick={() => onSelectExample(trip)}
-            >
-              {trip.label}
-            </button>
-          ))}
-        </div>
-      )}
+      {/* KineticGrid (Polish K) sits behind the hint/globe/chips, contained
+          to this panel's own rounded bounds (`.app-empty` provides the
+          `position: relative; overflow: hidden;` and border-radius - see
+          App.css) - not the header/form above it, and not app-wide. */}
+      <KineticGrid className="app-empty__grid" contentClassName="app-empty__grid-content">
+        {globeSupported ? (
+          <div className="app-empty__globe" aria-hidden="true">
+            <RouteGlobe size={200} onSupportChange={setGlobeSupported} />
+          </div>
+        ) : (
+          <span className="app-empty__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M3 12h4l2-7 4 14 2-7h6" />
+            </svg>
+          </span>
+        )}
+        <p className="app-empty__title">Plan a trip to see your route and daily logs</p>
+        <p className="app-empty__sub">
+          Fill in the current, pickup, and dropoff locations above and TripLogger will map the route and build
+          FMCSA-compliant driver&apos;s daily logs for every day of the trip.
+        </p>
+        {onSelectExample && (
+          <div className="app-empty__chips" role="group" aria-label="Example trips">
+            {EXAMPLE_TRIPS.map((trip) => (
+              <button
+                key={trip.id}
+                type="button"
+                className="example-chip"
+                onClick={() => onSelectExample(trip)}
+              >
+                {trip.label}
+              </button>
+            ))}
+          </div>
+        )}
+      </KineticGrid>
     </div>
   );
 }

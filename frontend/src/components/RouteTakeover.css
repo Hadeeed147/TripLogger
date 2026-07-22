@@ -10,10 +10,6 @@
   position: fixed;
   inset: 0;
   z-index: var(--z-takeover);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   overflow: hidden;
   background-color: var(--color-bg);
   background-image: var(--bg-glow), var(--bg-grid);
@@ -21,6 +17,32 @@
     100% 100%,
     var(--bg-grid-size);
   background-repeat: no-repeat, repeat;
+}
+
+/* ---------------------------------------------------------------------
+   KineticGrid backdrop (Polish K) - fills the whole overlay, behind
+   everything else. Its own canvas is transparent (clearRect only), so it
+   composites over the background-image recipe above rather than replacing
+   it. The centered-column layout that used to live on `.route-takeover`
+   itself now lives one level in, on the content layer above the canvas -
+   ancestor-qualified selectors (`.route-takeover .route-takeover__grid...`)
+   so these overrides win regardless of CSS import order between this file
+   and KineticGrid.css's own `.kinetic-grid`/`.kinetic-grid__content` base
+   rules (which default to `position: relative`, sized by content - not
+   what either of these needs).
+--------------------------------------------------------------------- */
+.route-takeover .route-takeover__grid {
+  position: absolute;
+  inset: 0;
+}
+
+.route-takeover .route-takeover__grid-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 /* ---------------------------------------------------------------------

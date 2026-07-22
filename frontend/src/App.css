@@ -232,17 +232,35 @@
    Empty state - shown before the first submission (and while idle).
 --------------------------------------------------------------------- */
 .app-empty {
-  display: flex;
+  position: relative;
   width: 100%;
   max-width: 640px;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-2);
   padding: var(--space-10) var(--space-6);
   background: var(--color-surface);
   border: 1px dashed var(--color-border-strong);
   border-radius: var(--radius-lg);
   text-align: center;
+  /* Clips KineticGrid's canvas to this panel's own rounded corners (Polish
+     K) - the grid must read as "this card's backdrop", never bleeding past
+     it into the form/header above or the page behind. */
+  overflow: hidden;
+}
+
+/* KineticGrid wrapper: fills the available width so its canvas (sized to
+   *this* box via ResizeObserver) matches the panel, not the viewport. The
+   actual flex layout that used to live on `.app-empty` itself now lives on
+   the content layer one level in (`.kinetic-grid__content` sits above the
+   canvas) - see KineticGrid.tsx. */
+.app-empty__grid {
+  width: 100%;
+}
+
+.app-empty__grid-content {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
 }
 
 .app-empty__icon {
