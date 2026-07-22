@@ -1,0 +1,249 @@
+/*
+  Cycle-used field - slider + numeric readout sharing one bordered control,
+  a live tone-shifting helper line below, and a hover/focus/click-pinned
+  info tooltip anchored top-right of the label row.
+*/
+
+.cycle-field {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.cycle-field__header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.cycle-field__control {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard);
+}
+
+.cycle-field__control:hover {
+  border-color: var(--color-border-strong);
+}
+
+.cycle-field__control:focus-within {
+  border-color: var(--color-accent);
+  box-shadow: var(--focus-ring);
+}
+
+/* ---------------------------------------------------------------------
+   Slider - accent fill up to the thumb via a CSS gradient background on
+   the input itself, with both native track pseudo-elements set transparent
+   so that background shows through in Chrome/Edge/Firefox alike.
+--------------------------------------------------------------------- */
+.cycle-field__slider {
+  flex: 1;
+  min-width: 0;
+  height: 6px;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  background: linear-gradient(
+    to right,
+    var(--color-accent) 0%,
+    var(--color-accent) var(--cycle-pct, 0%),
+    var(--color-border) var(--cycle-pct, 0%),
+    var(--color-border) 100%
+  );
+  border-radius: var(--radius-full);
+  outline: none;
+  cursor: pointer;
+}
+
+.cycle-field__slider::-webkit-slider-runnable-track {
+  height: 6px;
+  background: transparent;
+  border-radius: var(--radius-full);
+}
+
+.cycle-field__slider::-moz-range-track {
+  height: 6px;
+  background: transparent;
+  border-radius: var(--radius-full);
+}
+
+.cycle-field__slider::-moz-range-progress {
+  height: 6px;
+  background: var(--color-accent);
+  border-radius: var(--radius-full);
+}
+
+.cycle-field__slider::-webkit-slider-thumb {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 18px;
+  height: 18px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px solid var(--color-accent);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.cycle-field__slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--color-surface);
+  border: 2px solid var(--color-accent);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition: transform var(--duration-fast) var(--ease-standard);
+}
+
+.cycle-field__slider:active::-webkit-slider-thumb,
+.cycle-field__slider:focus-visible::-webkit-slider-thumb {
+  transform: scale(1.15);
+}
+
+.cycle-field__slider:active::-moz-range-thumb,
+.cycle-field__slider:focus-visible::-moz-range-thumb {
+  transform: scale(1.15);
+}
+
+/* ---------------------------------------------------------------------
+   Numeric readout - precise entry, kept small and right-aligned.
+--------------------------------------------------------------------- */
+.cycle-field__number-wrap {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: var(--space-1);
+  padding-left: var(--space-3);
+  border-left: 1px solid var(--color-border);
+}
+
+.cycle-field__number {
+  width: 3.25rem;
+  padding: 0;
+  background: transparent;
+  border: none;
+  outline: none;
+  text-align: right;
+  font-size: var(--text-base);
+  color: var(--color-text);
+}
+
+.cycle-field__suffix {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+/* ---------------------------------------------------------------------
+   Helper line - tone shifts as the 70hr budget shrinks.
+--------------------------------------------------------------------- */
+.cycle-field__helper {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.cycle-field__helper--warning {
+  color: var(--warning-700);
+  font-weight: var(--weight-medium);
+}
+
+.cycle-field__helper--danger {
+  color: var(--danger-700);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---------------------------------------------------------------------
+   Info tooltip - hover/focus reveal, click to pin (touch-friendly).
+--------------------------------------------------------------------- */
+.cycle-field__info {
+  position: relative;
+  display: inline-flex;
+  margin-left: auto;
+}
+
+.cycle-field__info-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+  padding: 0;
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 50%;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  transition:
+    border-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard);
+}
+
+.cycle-field__info-btn svg {
+  width: 13px;
+  height: 13px;
+}
+
+.cycle-field__info-btn:hover,
+.cycle-field__info-btn--pinned {
+  border-color: var(--color-accent);
+  color: var(--color-accent);
+}
+
+.cycle-field__tooltip {
+  position: absolute;
+  z-index: var(--z-dropdown);
+  top: calc(100% + var(--space-2));
+  right: 0;
+  width: 260px;
+  padding: var(--space-3);
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--color-text);
+  font-weight: var(--weight-regular);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-4px);
+  transition:
+    opacity var(--duration-base) var(--ease-standard),
+    transform var(--duration-base) var(--ease-standard);
+  pointer-events: none;
+}
+
+.cycle-field__info:hover .cycle-field__tooltip,
+.cycle-field__info:focus-within .cycle-field__tooltip,
+.cycle-field__tooltip--pinned {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cycle-field__slider::-webkit-slider-thumb,
+  .cycle-field__slider::-moz-range-thumb,
+  .cycle-field__tooltip {
+    transition: none;
+  }
+}
+
+@media (max-width: 640px) {
+  .cycle-field__tooltip {
+    left: 0;
+    right: auto;
+    width: 220px;
+  }
+}

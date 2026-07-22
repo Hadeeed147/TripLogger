@@ -1,0 +1,302 @@
+/*
+  RouteTakeover - full-viewport globe takeover shown the instant a trip is
+  submitted. Fixed overlay, opaque background (nothing behind it shows),
+  reuses the exact page-background recipe (--bg-glow + --bg-grid) from
+  tokens.css/body so it reads as "the page itself, zoomed into space"
+  rather than a jarring modal dropped on top of it.
+*/
+
+.route-takeover {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-takeover);
+  overflow: hidden;
+  background-color: var(--color-bg);
+  background-image: var(--bg-glow), var(--bg-grid);
+  background-size:
+    100% 100%,
+    var(--bg-grid-size);
+  background-repeat: no-repeat, repeat;
+}
+
+/* ---------------------------------------------------------------------
+   KineticGrid backdrop (Polish K) - fills the whole overlay, behind
+   everything else. Its own canvas is transparent (clearRect only), so it
+   composites over the background-image recipe above rather than replacing
+   it. The centered-column layout that used to live on `.route-takeover`
+   itself now lives one level in, on the content layer above the canvas -
+   ancestor-qualified selectors (`.route-takeover .route-takeover__grid...`)
+   so these overrides win regardless of CSS import order between this file
+   and KineticGrid.css's own `.kinetic-grid`/`.kinetic-grid__content` base
+   rules (which default to `position: relative`, sized by content - not
+   what either of these needs).
+--------------------------------------------------------------------- */
+.route-takeover .route-takeover__grid {
+  position: absolute;
+  inset: 0;
+}
+
+.route-takeover .route-takeover__grid-content {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ---------------------------------------------------------------------
+   Globe + chip layer.
+--------------------------------------------------------------------- */
+.route-takeover__globe-wrap {
+  position: relative;
+  display: flex;
+  max-width: 100%;
+  max-height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.route-takeover__chip {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-1) var(--space-3);
+  white-space: nowrap;
+  color: var(--color-text-strong);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-md);
+  pointer-events: none;
+  will-change: transform, opacity;
+}
+
+.route-takeover__chip-dot {
+  width: 7px;
+  height: 7px;
+  flex-shrink: 0;
+  border-radius: 50%;
+}
+
+.route-takeover__chip--current .route-takeover__chip-dot {
+  background: var(--color-text-muted);
+}
+
+.route-takeover__chip--pickup .route-takeover__chip-dot {
+  background: var(--color-accent);
+}
+
+.route-takeover__chip--dropoff .route-takeover__chip-dot {
+  background: var(--navy-700);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .route-takeover__chip--dropoff .route-takeover__chip-dot {
+    background: var(--accent-200);
+  }
+}
+
+:root[data-theme="dark"] .route-takeover__chip--dropoff .route-takeover__chip-dot {
+  background: var(--accent-200);
+}
+
+/* ---------------------------------------------------------------------
+   Skip (intro only) / persistent explore button (explore only) - same
+   corner treatment as the old RouteReveal skip, opposite corners so they
+   never fight for the same space (they never render simultaneously, since
+   they belong to mutually exclusive sub-phases, but distinct corners keep
+   muscle-memory consistent regardless).
+--------------------------------------------------------------------- */
+.route-takeover__skip {
+  position: absolute;
+  top: var(--space-5);
+  right: var(--space-5);
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  cursor: pointer;
+  transition:
+    color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard);
+}
+
+.route-takeover__skip:hover {
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent);
+}
+
+.route-takeover__persist {
+  position: absolute;
+  right: var(--space-5);
+  bottom: var(--space-5);
+  z-index: 1;
+  padding: var(--space-3) var(--space-5);
+  color: var(--color-on-accent);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  background: var(--color-accent);
+  border: none;
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.route-takeover__persist:hover {
+  background: var(--color-accent-strong);
+}
+
+.route-takeover__persist:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.route-takeover__skip:focus-visible,
+.route-takeover__persist:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+/* ---------------------------------------------------------------------
+   Bottom phase caption - subtle, non-blocking, matches the pill treatment
+   used elsewhere (example-chip, print-button) rather than inventing a new
+   surface style.
+--------------------------------------------------------------------- */
+.route-takeover__caption {
+  position: absolute;
+  bottom: var(--space-6);
+  left: 50%;
+  max-width: min(90vw, 480px);
+  padding: var(--space-2) var(--space-4);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  transform: translateX(-50%);
+}
+
+/* ---------------------------------------------------------------------
+   Dimming scrim + completion panel ("ready").
+--------------------------------------------------------------------- */
+.route-takeover__scrim {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: color-mix(in srgb, var(--color-bg) 72%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.route-takeover__panel {
+  position: relative;
+  z-index: 2;
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-4);
+  max-width: 460px;
+  padding: var(--space-8) var(--space-6);
+  text-align: center;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+}
+
+.route-takeover__panel-title {
+  font-size: var(--text-xl);
+}
+
+.route-takeover__panel-summary {
+  color: var(--color-text);
+  font-size: var(--text-md);
+  font-weight: var(--weight-medium);
+  font-variant-numeric: tabular-nums;
+}
+
+.route-takeover__panel-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+}
+
+.route-takeover__btn {
+  padding: var(--space-3) var(--space-5);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition:
+    background-color var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard),
+    color var(--duration-base) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard);
+}
+
+.route-takeover__btn--primary {
+  color: var(--color-on-accent);
+  background: var(--color-accent);
+  border: none;
+}
+
+.route-takeover__btn--primary:hover {
+  background: var(--color-accent-strong);
+}
+
+.route-takeover__btn--secondary {
+  color: var(--color-text-strong);
+  background: transparent;
+  border: 1px solid var(--color-border-strong);
+}
+
+.route-takeover__btn--secondary:hover {
+  color: var(--color-accent-strong);
+  border-color: var(--color-accent);
+}
+
+.route-takeover__btn:active {
+  transform: translateY(1px) scale(0.98);
+}
+
+.route-takeover__btn:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 2px;
+}
+
+@media (max-width: 640px) {
+  .route-takeover__panel {
+    max-width: 92vw;
+    padding: var(--space-6) var(--space-4);
+  }
+
+  .route-takeover__skip,
+  .route-takeover__persist {
+    padding: var(--space-2) var(--space-3);
+  }
+
+  .route-takeover__caption {
+    font-size: var(--text-xs);
+  }
+}

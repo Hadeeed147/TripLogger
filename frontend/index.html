@@ -2,6 +2,32 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <!--
+      Applies the saved/system theme to <html> before any CSS paints, so
+      there is no flash of the wrong theme. Must run synchronously (no
+      type="module", no defer) and stay first in <head> so it executes
+      before the stylesheet Vite injects. Mirrors src/theme.ts's logic
+      (kept as a literal duplicate here since inline scripts can't import
+      ESM before the app bundle loads) — same storage key, same fallback
+      to prefers-color-scheme.
+    -->
+    <script>
+      (function () {
+        try {
+          var KEY = "triplogger-theme";
+          var stored = localStorage.getItem(KEY);
+          var theme =
+            stored === "light" || stored === "dark"
+              ? stored
+              : window.matchMedia("(prefers-color-scheme: dark)").matches
+                ? "dark"
+                : "light";
+          document.documentElement.setAttribute("data-theme", theme);
+        } catch (e) {
+          /* localStorage/matchMedia unavailable (privacy mode, old browser) - fall back to CSS's own prefers-color-scheme handling. */
+        }
+      })();
+    </script>
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TripLogger</title>

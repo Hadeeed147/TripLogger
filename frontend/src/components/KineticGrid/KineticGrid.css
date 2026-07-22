@@ -1,0 +1,31 @@
+/*
+  KineticGrid - contained interactive canvas backdrop. Deliberately has no
+  opinion on its own size: the wrapper is `position: relative` and sized by
+  whatever normal-flow content ends up in `.kinetic-grid__content` (the
+  empty-state placement) or by a caller override to `position: absolute;
+  inset: 0` inside an already-sized ancestor (the takeover placement) - see
+  App.css / RouteTakeover.css for each integration's own sizing rule.
+*/
+
+.kinetic-grid {
+  position: relative;
+}
+
+.kinetic-grid__canvas {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: block;
+  /* Never intercepts pointer/click - the wrapper's own listeners (attached
+     in KineticGrid.tsx) are what drive the warp/ripple, and controls in
+     `children` must stay fully clickable. */
+  pointer-events: none;
+}
+
+/* Public: callers may target this class (or pass `contentClassName`) to lay
+   `children` out however their surface needs - KineticGrid itself only
+   guarantees it renders above the canvas. */
+.kinetic-grid__content {
+  position: relative;
+  z-index: 1;
+}

@@ -1,12 +1,16 @@
 import {
+  forwardRef,
   useEffect,
   useId,
+  useImperativeHandle,
+  useRef,
   useState,
   type ChangeEvent,
   type FormEvent,
-  type ReactNode,
 } from "react";
 import type { TripRequest } from "../../api/types";
+import LocationField from "./LocationField";
+import CycleUsedField from "./CycleUsedField";
 import "./TripForm.css";
 
 /**
@@ -18,6 +22,19 @@ import "./TripForm.css";
 export interface TripFormFieldError {
   field: string;
   detail: string;
+}
+
+/** Shape an example-trip chip (see src/data/exampleTrips.ts) must satisfy to be handed to fillExample(). */
+export interface TripFormPrefill {
+  current_location: string;
+  pickup_location: string;
+  dropoff_location: string;
+  current_cycle_used: number;
+}
+
+/** Imperative handle exposed via ref so App can fill the form from an example-trip chip click and focus submit. */
+export interface TripFormHandle {
+  fillExample: (values: TripFormPrefill) => void;
 }
 
 interface TripFormProps {
@@ -141,55 +158,10 @@ function SpinnerIcon() {
   );
 }
 
-/* -------------------------------------------------------------------------
-   TextField - label above input, inline icon, error text below.
-------------------------------------------------------------------------- */
-
-interface TextFieldProps {
-  id: string;
-  label: string;
-  icon: ReactNode;
-  value: string;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  error?: string;
-  placeholder?: string;
-  autoComplete?: string;
-}
-
-function TextField({ id, label, icon, value, onChange, error, placeholder, autoComplete }: TextFieldProps) {
-  const errorId = `${id}-error`;
-  return (
-    <div className="trip-field">
-      <label htmlFor={id} className="trip-field__label">
-        {label}
-      </label>
-      <div className={`trip-field__control${error ? " trip-field__control--error" : ""}`}>
-        <span className="trip-field__icon" aria-hidden="true">
-          {icon}
-        </span>
-        <input
-          id={id}
-          name={id}
-          type="text"
-          className="trip-field__input"
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          aria-invalid={Boolean(error)}
-          aria-describedby={error ? errorId : undefined}
-        />
-      </div>
-      {error && (
-        <p id={errorId} className="trip-field__error" role="alert">
-          {error}
-        </p>
-      )}
-    </div>
-  );
-}
-
-export default function TripForm({ onSubmit, loading, fieldError }: TripFormProps) {
+const TripForm = forwardRef<TripFormHandle, TripFormProps>(function TripForm(
+  { onSubmit, loading, fieldError },
+  ref,
+) {
   const [values, setValues] = useState<FormValues>(INITIAL_VALUES);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [departureOpen, setDepartureOpen] = useState(false);
@@ -198,6 +170,7 @@ export default function TripForm({ onSubmit, loading, fieldError }: TripFormProp
   );
   const cycleId = useId();
   const departureId = useId();
+  const submitRef = useRef<HTMLButtonElement>(null);
 
   // Sync a server-reported field error into local error state so the
   // matching input highlights and shows the server's detail message.
@@ -207,18 +180,37 @@ export default function TripForm({ onSubmit, loading, fieldError }: TripFormProp
     }
   }, [fieldError]);
 
-  function handleChange(name: keyof FormValues) {
-    return (e: ChangeEvent<HTMLInputElement>) => {
-      const { value } = e.target;
-      setValues((prev) => ({ ...prev, [name]: value }));
-      setErrors((prev) => {
-        if (!(name in prev)) return prev;
-        const next = { ...prev };
-        delete next[name];
-        return next;
-      });
-    };
+  function setField(name: keyof FormValues, value: string) {
+    setValues((prev) => ({ ...prev, [name]: value }));
+    setErrors((prev) => {
+      if (!(name in prev)) return prev;
+      const next = { ...prev };
+      delete next[name];
+      return next;
+    });
   }
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      fillExample(trip: TripFormPrefill) {
+        setValues({
+          current_location: trip.current_location,
+          pickup_location: trip.pickup_location,
+          dropoff_location: trip.dropoff_location,
+          current_cycle_used: String(trip.current_cycle_used),
+        });
+        setErrors({});
+        // React flushes the state update above synchronously within this
+        // same event-handler call (automatic batching still commits before
+        // control returns to the browser here), so the DOM already reflects
+        // the new values by the time we scroll/focus - no rAF/timeout needed.
+        submitRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+        submitRef.current?.focus();
+      },
+    }),
+    [],
+  );
 
   function handleSubmit(e: FormEvent) {
     e.preventDefault();
@@ -250,64 +242,41 @@ export default function TripForm({ onSubmit, loading, fieldError }: TripFormProp
   return (
     <form className="trip-form" onSubmit={handleSubmit} noValidate>
       <div className="trip-form__row">
-        <TextField
+        <LocationField
           id="current_location"
           label="Current location"
           icon={<TruckIcon />}
           value={values.current_location}
-          onChange={handleChange("current_location")}
+          onChange={(value) => setField("current_location", value)}
           error={errors.current_location}
           placeholder="Chicago, IL"
-          autoComplete="off"
         />
-        <TextField
+        <LocationField
           id="pickup_location"
           label="Pickup location"
           icon={<PackageUpIcon />}
           value={values.pickup_location}
-          onChange={handleChange("pickup_location")}
+          onChange={(value) => setField("pickup_location", value)}
           error={errors.pickup_location}
           placeholder="Denver, CO"
-          autoComplete="off"
         />
-        <TextField
+        <LocationField
           id="dropoff_location"
           label="Dropoff location"
           icon={<PackageDownIcon />}
           value={values.dropoff_location}
-          onChange={handleChange("dropoff_location")}
+          onChange={(value) => setField("dropoff_location", value)}
           error={errors.dropoff_location}
           placeholder="Los Angeles, CA"
-          autoComplete="off"
         />
       </div>
 
-      <div className="trip-field trip-field--cycle">
-        <label htmlFor={cycleId} className="trip-field__label">
-          Cycle used (last 8 days)
-        </label>
-        <div className={`trip-cycle-control${errors.current_cycle_used ? " trip-field__control--error" : ""}`}>
-          <input
-            id={cycleId}
-            name="current_cycle_used"
-            type="number"
-            className="trip-cycle-control__input num"
-            min={0}
-            max={70}
-            step={0.5}
-            value={values.current_cycle_used}
-            onChange={handleChange("current_cycle_used")}
-            aria-invalid={Boolean(errors.current_cycle_used)}
-            aria-describedby={errors.current_cycle_used ? `${cycleId}-error` : undefined}
-          />
-          <span className="trip-cycle-control__suffix">hrs</span>
-        </div>
-        {errors.current_cycle_used && (
-          <p id={`${cycleId}-error`} className="trip-field__error" role="alert">
-            {errors.current_cycle_used}
-          </p>
-        )}
-      </div>
+      <CycleUsedField
+        id={cycleId}
+        value={values.current_cycle_used}
+        onChange={(value) => setField("current_cycle_used", value)}
+        error={errors.current_cycle_used}
+      />
 
       <div className="trip-departure">
         <button
@@ -334,13 +303,13 @@ export default function TripForm({ onSubmit, loading, fieldError }: TripFormProp
               type="datetime-local"
               className="trip-departure__input num"
               value={departureTime}
-              onChange={(e) => setDepartureTime(e.target.value)}
+              onChange={(e: ChangeEvent<HTMLInputElement>) => setDepartureTime(e.target.value)}
             />
           </div>
         )}
       </div>
 
-      <button type="submit" className="trip-submit" disabled={loading}>
+      <button ref={submitRef} type="submit" className="trip-submit" disabled={loading}>
         {loading && (
           <span className="trip-submit__spinner" aria-hidden="true">
             <SpinnerIcon />
@@ -350,4 +319,6 @@ export default function TripForm({ onSubmit, loading, fieldError }: TripFormProp
       </button>
     </form>
   );
-}
+});
+
+export default TripForm;

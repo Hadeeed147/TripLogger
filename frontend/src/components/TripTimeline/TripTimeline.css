@@ -1,0 +1,367 @@
+/*
+  TripTimeline - "the whole trip as one log sheet": a miniature, continuous
+  ELD step-line spanning every day of the trip (not one block per segment
+  like the original ruler/gantt strip). Structural language borrowed
+  directly from LogSheet's own paper-form step-line (same buildStepPath
+  helper, same --status-* row colors) so the two visually read as the same
+  system at two different zoom levels.
+
+  Layout constants below (row heights, chart-scale offsets) mirror the
+  fixed pixel constants at the top of TripTimeline.tsx (HOUR_PX, ROW_H,
+  GLYPH_ROW_H, ROWS_TOP/BOTTOM, SVG_HEIGHT) - if those change, the
+  scrubber/day-label pixel offsets here need to move with them.
+*/
+
+.trip-timeline {
+  display: flex;
+  width: 100%;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-5);
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ---------------------------------------------------------------------
+   Header row - title + legend combined, per Polish G ("legend row stays,
+   can move into a header row with a small caption").
+--------------------------------------------------------------------- */
+.trip-timeline__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.trip-timeline__title {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+  color: var(--color-text-strong);
+}
+
+.trip-timeline__legend {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.trip-timeline__legend-item {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+}
+
+.trip-timeline__legend-swatch {
+  position: relative;
+  width: 12px;
+  height: 12px;
+  overflow: hidden;
+  background: var(--surface-500);
+  border-radius: var(--radius-sm);
+}
+
+.trip-timeline__legend-swatch--restart {
+  background: var(--status-off);
+}
+
+.trip-timeline__legend-swatch--restart::after {
+  position: absolute;
+  inset: 0;
+  content: "";
+  background-image: repeating-linear-gradient(
+    45deg,
+    color-mix(in srgb, var(--danger-500) 55%, transparent) 0,
+    color-mix(in srgb, var(--danger-500) 55%, transparent) 2px,
+    transparent 2px,
+    transparent 5px
+  );
+}
+
+/* ---------------------------------------------------------------------
+   Scroll region - the chart is a fixed pixel width (HOUR_PX * trip hours,
+   floored at MIN_CHART_WIDTH); this wrapper scrolls it horizontally
+   instead of ever crushing a multi-day trip into a fixed viewport width.
+
+   `overflow-y: auto` (not `visible`) is written explicitly rather than left
+   to whatever the default resolves to: per the CSS overflow spec, pairing
+   `overflow-x: auto` with a `visible` cross-axis silently coerces that axis
+   to `auto` too, so this element was ALREADY a vertical scroll container
+   even when this rule said `visible` - it just wasn't honest about it, and
+   a horizontal scrollbar (a real, space-consuming ~15-17px strip on
+   Windows/Linux with classic scrollbars) was eating into that same
+   coerced-auto vertical box, clipping the day-labels row and scrub chip
+   that used to sit right at the bottom edge of it. The real fix is on the
+   TSX side (TripTimeline.tsx's `SVG_HEIGHT`/`SCROLLBAR_SAFE_ZONE` now give
+   every element - including the scrub chip - room within the chart's own
+   height, with a deliberate blank margin below all of them for a scrollbar
+   to harmlessly eat into); this is just declaring the true computed value
+   instead of a misleading one.
+--------------------------------------------------------------------- */
+.trip-timeline__scroll {
+  width: 100%;
+  /* Top gutter so the hover tooltip (which renders ABOVE its segment, i.e.
+     into negative chart-y) has room inside this scroll box instead of being
+     clipped by its top edge - overflow-x:auto forces overflow-y to a
+     clipping value, so anything escaping the box vertically is cut off. */
+  padding-top: 24px;
+  overflow-x: auto;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  /* No scroll-snap: day-label snap points sit at each day's CENTER, not at
+     x=0, so proximity-snapping fought the user every time they scrolled back
+     to the origin (it yanked the view to the nearest day-label center). */
+}
+
+.trip-timeline__chart {
+  position: relative;
+  flex-shrink: 0;
+  cursor: crosshair;
+}
+
+.trip-timeline-mini__svg {
+  display: block;
+}
+
+/* ---------------------------------------------------------------------
+   Row guide-lines + captions.
+--------------------------------------------------------------------- */
+.trip-timeline-mini__guide {
+  stroke: var(--color-border);
+  stroke-width: 1;
+}
+
+.trip-timeline-mini__rowlabel {
+  fill: var(--color-text-faint);
+  font-size: 7.5px;
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.02em;
+}
+
+/* ---------------------------------------------------------------------
+   Underlay bands - status color dimmed via fill-opacity (permanent, not
+   the entrance-animation opacity below) so the color still reads behind
+   the step-line without competing with it.
+--------------------------------------------------------------------- */
+.trip-timeline-mini__band {
+  fill-opacity: 0.22;
+}
+
+.trip-timeline-mini__hatch-bg {
+  fill: transparent;
+}
+
+.trip-timeline-mini__hatch-line {
+  stroke: var(--danger-500);
+  stroke-width: 1.4;
+  opacity: 0.6;
+}
+
+.trip-timeline-mini__restart-overlay {
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------
+   Ticks + day-boundary rules.
+--------------------------------------------------------------------- */
+.trip-timeline-mini__tick {
+  stroke: var(--color-border);
+  stroke-width: 1;
+  opacity: 0.7;
+}
+
+.trip-timeline-mini__daymark {
+  stroke: var(--color-border-strong);
+  stroke-width: 1;
+}
+
+/* ---------------------------------------------------------------------
+   Step-line - navy in light mode; swapped to the (lighter, higher-
+   contrast-on-dark) accent in dark mode via the same dual mechanism
+   tokens.css uses (media query for OS-level dark + explicit data-theme
+   override for the manual toggle).
+--------------------------------------------------------------------- */
+.trip-timeline-mini__stepline {
+  stroke: var(--navy-700);
+  stroke-width: 2;
+  stroke-linejoin: round;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .trip-timeline-mini__stepline {
+    stroke: var(--accent-400);
+  }
+}
+
+:root[data-theme="dark"] .trip-timeline-mini__stepline {
+  stroke: var(--accent-400);
+}
+
+/* ---------------------------------------------------------------------
+   Stop glyph chips.
+--------------------------------------------------------------------- */
+.trip-timeline-mini__glyph-bg {
+  stroke: var(--color-surface);
+  stroke-width: 1.25;
+}
+
+.trip-timeline-mini__glyph-icon {
+  overflow: visible;
+  color: var(--surface-0);
+  pointer-events: none;
+}
+
+/* ---------------------------------------------------------------------
+   HTML overlay - click/keyboard targets + rich tooltip, layered exactly
+   over the SVG's coordinate space (chart div is the shared positioning
+   context for both).
+--------------------------------------------------------------------- */
+.trip-timeline-mini__overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.trip-timeline-mini__hit {
+  position: absolute;
+  padding: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.trip-timeline-mini__hit:hover,
+.trip-timeline-mini__hit:focus-visible {
+  z-index: 1;
+}
+
+.trip-timeline-mini__hit:focus-visible {
+  outline: var(--focus-ring-width) solid var(--focus-ring-color);
+  outline-offset: 1px;
+}
+
+.trip-timeline-mini__tooltip {
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  z-index: var(--z-dropdown);
+  padding: var(--space-2) var(--space-3);
+  overflow: hidden;
+  color: var(--color-text);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  visibility: hidden;
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-lg);
+  opacity: 0;
+  transform: translate(-50%, 4px);
+  transition:
+    opacity var(--duration-fast) var(--ease-standard),
+    transform var(--duration-fast) var(--ease-standard),
+    visibility var(--duration-fast);
+}
+
+.trip-timeline-mini__hit:hover .trip-timeline-mini__tooltip,
+.trip-timeline-mini__hit:focus-visible .trip-timeline-mini__tooltip {
+  visibility: visible;
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+/* ---------------------------------------------------------------------
+   Day labels - sit in the blank strip the SVG reserves below the ticks.
+--------------------------------------------------------------------- */
+.trip-timeline-mini__daylabels {
+  position: absolute;
+  /* DAYLABEL_TOP = ROWS_BOTTOM(116) + TICK_H(5) + 2 - see TripTimeline.tsx */
+  top: 123px;
+  left: 0;
+  width: 100%;
+  height: 18px;
+  pointer-events: none;
+}
+
+.trip-timeline-mini__daylabel {
+  position: absolute;
+  top: 0;
+  padding: 0;
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  cursor: pointer;
+  pointer-events: auto;
+  transform: translateX(-50%);
+  transition: color var(--duration-base) var(--ease-standard);
+}
+
+.trip-timeline-mini__daylabel:hover {
+  color: var(--color-text-strong);
+}
+
+.trip-timeline-mini__daylabel--active {
+  color: var(--color-accent-strong);
+  font-weight: var(--weight-semibold);
+}
+
+/* ---------------------------------------------------------------------
+   Scrubber - vertical cursor line across the row block + a floating time
+   chip below the chart, following the pointer (mouse only).
+--------------------------------------------------------------------- */
+.trip-timeline-mini__scrub-line {
+  position: absolute;
+  /* ROWS_TOP(28) - 4 */
+  top: 24px;
+  /* ROW_H*4(88) + 8 */
+  height: 96px;
+  width: 1px;
+  background: var(--color-accent);
+  opacity: 0.6;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.trip-timeline-mini__scrub-chip {
+  position: absolute;
+  /* SCRUB_CHIP_TOP = DAYLABEL_TOP(123) + DAYLABEL_ROW_H(18) + gap(4) - see
+     TripTimeline.tsx. Comfortably inside SVG_HEIGHT(185), unlike the old
+     147px value which sat in a separate padding-bottom region past the
+     SVG's own height - exactly the strip a horizontal scrollbar could eat
+     into and clip (see the .trip-timeline__scroll comment above). */
+  top: 145px;
+  z-index: var(--z-dropdown);
+  padding: 2px var(--space-2);
+  color: var(--color-on-accent);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  background: var(--color-accent);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-sm);
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+@media (max-width: 640px) {
+  .trip-timeline {
+    padding: var(--space-4);
+  }
+}

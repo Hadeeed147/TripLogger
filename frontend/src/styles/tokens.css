@@ -103,6 +103,20 @@
   --color-on-primary: var(--ink-inverse);
   --color-on-accent: var(--ink-inverse);
 
+  /* Layered page background - a soft navy-tinted glow easing in from the
+     top plus a barely-there dot grid, both composited over --color-bg on
+     the <body> element (see "Global element defaults" below). Kept under
+     ~7% opacity so it reads as depth/texture on a premium tool, never as
+     decoration competing with content cards sitting on top. Redefined
+     alongside every other background token in the dark blocks below. */
+  --bg-glow: radial-gradient(
+    1100px 620px at 50% -12%,
+    rgb(27 42 94 / 7%),
+    transparent 62%
+  );
+  --bg-grid: radial-gradient(rgb(27 42 94 / 2%) 1px, transparent 1px);
+  --bg-grid-size: 24px 24px;
+
   /* ---------------------------------------------------------------------
      Typography
   --------------------------------------------------------------------- */
@@ -194,15 +208,35 @@
   --z-dropdown: 30;
   --z-modal: 40;
   --z-toast: 50;
+  /* The full-page globe takeover (RouteTakeover) is a fixed overlay that
+     must sit above literally everything else, including toasts. */
+  --z-takeover: 100;
 
   color-scheme: light dark;
 }
 
 /* ---------------------------------------------------------------------
    Dark mode — same brand hues, remapped surface/ink ramp. No pure black.
+
+   Theme mechanism (Polish B): dark values live in TWO places that must be
+   kept in sync (duplicated on purpose — see comment on the second block):
+     1. The @media block below applies dark tokens automatically whenever
+        the OS prefers dark AND the user hasn't explicitly chosen a theme
+        (":root:not([data-theme=\"light\"])" — an explicit data-theme="light"
+        wins over a dark system preference).
+     2. The ":root[data-theme=\"dark\"]" block right after it applies the
+        same dark tokens when the user explicitly picked dark via the
+        header toggle (src/components/ThemeToggle.tsx), regardless of OS
+        preference. That choice is persisted to localStorage
+        ("triplogger-theme") and re-applied before first paint by the
+        inline snippet in index.html, so there is no flash of the wrong
+        theme. The base ":root" above already holds the light values, so
+        no separate ":root[data-theme=\"light\"]" color block is needed —
+        only a color-scheme override (below) to force light native form
+        controls/scrollbars even when the OS is dark.
 --------------------------------------------------------------------- */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --color-bg: var(--surface-900);
     --color-surface: var(--surface-800);
     --color-surface-raised: var(--surface-700);
@@ -225,6 +259,13 @@
     --status-driving: var(--accent-400);
     --status-on-duty: #dba64a;
 
+    --bg-glow: radial-gradient(
+      1100px 620px at 50% -12%,
+      rgb(47 111 237 / 10%),
+      transparent 62%
+    );
+    --bg-grid: radial-gradient(rgb(255 255 255 / 2%) 1px, transparent 1px);
+
     --shadow-sm:
       0 1px 2px rgb(0 0 0 / 30%),
       0 1px 1px rgb(0 0 0 / 20%);
@@ -234,7 +275,67 @@
     --shadow-lg:
       0 12px 30px rgb(0 0 0 / 44%),
       0 4px 10px rgb(0 0 0 / 28%);
+
+    color-scheme: dark;
   }
+}
+
+/* Explicit dark choice (header toggle). Duplicate of the media block above
+   — if you change one, change both. Kept as a literal duplicate rather than
+   a shared class-like construct because CSS custom properties have no
+   @mixin/@include equivalent; a preprocessor is out of scope for this
+   project (tokens.css is plain CSS, no Sass/PostCSS nesting-vars build
+   step), so a plain duplicate block is the standard, dependency-free
+   pattern for this "media query + explicit override" theming setup. */
+:root[data-theme="dark"] {
+  --color-bg: var(--surface-900);
+  --color-surface: var(--surface-800);
+  --color-surface-raised: var(--surface-700);
+  --color-border: var(--surface-700);
+  --color-border-strong: var(--surface-600);
+  --color-text: var(--surface-100);
+  --color-text-strong: #ffffff;
+  --color-text-muted: var(--surface-400);
+  --color-text-faint: var(--surface-500);
+
+  --color-primary: var(--accent-400);
+  --color-primary-strong: var(--accent-200);
+  --color-accent: var(--accent-400);
+  --color-accent-strong: var(--accent-200);
+  --color-on-primary: var(--navy-900);
+  --color-on-accent: var(--navy-900);
+
+  --status-off: var(--surface-400);
+  --status-sleeper: var(--accent-200);
+  --status-driving: var(--accent-400);
+  --status-on-duty: #dba64a;
+
+  --bg-glow: radial-gradient(
+    1100px 620px at 50% -12%,
+    rgb(47 111 237 / 10%),
+    transparent 62%
+  );
+  --bg-grid: radial-gradient(rgb(255 255 255 / 2%) 1px, transparent 1px);
+
+  --shadow-sm:
+    0 1px 2px rgb(0 0 0 / 30%),
+    0 1px 1px rgb(0 0 0 / 20%);
+  --shadow-md:
+    0 4px 10px rgb(0 0 0 / 36%),
+    0 2px 4px rgb(0 0 0 / 24%);
+  --shadow-lg:
+    0 12px 30px rgb(0 0 0 / 44%),
+    0 4px 10px rgb(0 0 0 / 28%);
+
+  color-scheme: dark;
+}
+
+/* Explicit light choice overrides a dark OS preference: the base :root
+   above already holds every light color token, so this block only needs
+   to force color-scheme back to light (native scrollbars/form controls
+   otherwise follow the OS regardless of our chosen palette). */
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 /* ---------------------------------------------------------------------
@@ -257,7 +358,13 @@ body {
   line-height: var(--leading-normal);
   font-weight: var(--weight-regular);
   color: var(--color-text);
-  background: var(--color-bg);
+  background-color: var(--color-bg);
+  background-image: var(--bg-glow), var(--bg-grid);
+  background-size:
+    100% 100%,
+    var(--bg-grid-size);
+  background-repeat: no-repeat, repeat;
+  background-attachment: fixed, fixed;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;

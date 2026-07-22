@@ -14,6 +14,7 @@ class GridEntry:
 @dataclass
 class Remark:
     time_min: int
+    end_min: int
     location: str
     note: str
 
@@ -84,7 +85,9 @@ def build_day_logs(timeline: Timeline) -> list[DayLog]:
             end_m = 1440 if i == len(segs) - 1 else _snap((s.end - base).total_seconds() / 60.0)
             end_m = max(end_m, start_m)
             if s.label and s.label != "Driving":
-                remarks.append(Remark(min(start_m, 1425), s.location, s.label))
+                remark_start = min(start_m, 1425)
+                remark_end = max(end_m, remark_start)
+                remarks.append(Remark(remark_start, remark_end, s.location, s.label))
             if end_m > start_m:
                 if grid and grid[-1].status == s.status:
                     grid[-1].end_min = end_m

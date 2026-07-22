@@ -157,6 +157,7 @@ class TripPlanView(APIView):
                     "remarks": [
                         {
                             "time_min": remark.time_min,
+                            "end_min": remark.end_min,
                             "city_state": remark.location,
                             "note": remark.note,
                         }

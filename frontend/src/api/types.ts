@@ -74,6 +74,8 @@ export interface GridEntryDto {
 export interface RemarkDto {
   /** Minutes from start of day (0-1440). */
   time_min: number;
+  /** Minutes from start of day (0-1440); end of the duty-status change's span. */
+  end_min: number;
   city_state: string;
   note: string;
 }
