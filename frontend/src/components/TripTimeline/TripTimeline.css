@@ -89,11 +89,26 @@
    Scroll region - the chart is a fixed pixel width (HOUR_PX * trip hours,
    floored at MIN_CHART_WIDTH); this wrapper scrolls it horizontally
    instead of ever crushing a multi-day trip into a fixed viewport width.
+
+   `overflow-y: auto` (not `visible`) is written explicitly rather than left
+   to whatever the default resolves to: per the CSS overflow spec, pairing
+   `overflow-x: auto` with a `visible` cross-axis silently coerces that axis
+   to `auto` too, so this element was ALREADY a vertical scroll container
+   even when this rule said `visible` - it just wasn't honest about it, and
+   a horizontal scrollbar (a real, space-consuming ~15-17px strip on
+   Windows/Linux with classic scrollbars) was eating into that same
+   coerced-auto vertical box, clipping the day-labels row and scrub chip
+   that used to sit right at the bottom edge of it. The real fix is on the
+   TSX side (TripTimeline.tsx's `SVG_HEIGHT`/`SCROLLBAR_SAFE_ZONE` now give
+   every element - including the scrub chip - room within the chart's own
+   height, with a deliberate blank margin below all of them for a scrollbar
+   to harmlessly eat into); this is just declaring the true computed value
+   instead of a misleading one.
 --------------------------------------------------------------------- */
 .trip-timeline__scroll {
   width: 100%;
   overflow-x: auto;
-  overflow-y: visible;
+  overflow-y: auto;
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
 }
@@ -101,9 +116,6 @@
 .trip-timeline__chart {
   position: relative;
   flex-shrink: 0;
-  /* Reserves room below the SVG (which already allocates a blank strip for
-     the day-label row) for the scrubber's floating time chip. */
-  padding-bottom: 22px;
   cursor: crosshair;
 }
 
@@ -269,7 +281,7 @@
 --------------------------------------------------------------------- */
 .trip-timeline-mini__daylabels {
   position: absolute;
-  /* GLYPH_ROW_H(20) + ROWS_TOP margin(8) + ROW_H*4(88) + TICK_H(5) + 2 */
+  /* DAYLABEL_TOP = ROWS_BOTTOM(116) + TICK_H(5) + 2 - see TripTimeline.tsx */
   top: 123px;
   left: 0;
   width: 100%;
@@ -322,8 +334,12 @@
 
 .trip-timeline-mini__scrub-chip {
   position: absolute;
-  /* SVG_HEIGHT(143) + 4 */
-  top: 147px;
+  /* SCRUB_CHIP_TOP = DAYLABEL_TOP(123) + DAYLABEL_ROW_H(18) + gap(4) - see
+     TripTimeline.tsx. Comfortably inside SVG_HEIGHT(185), unlike the old
+     147px value which sat in a separate padding-bottom region past the
+     SVG's own height - exactly the strip a horizontal scrollbar could eat
+     into and clip (see the .trip-timeline__scroll comment above). */
+  top: 145px;
   z-index: var(--z-dropdown);
   padding: 2px var(--space-2);
   color: var(--color-on-accent);

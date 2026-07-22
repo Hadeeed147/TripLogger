@@ -58,7 +58,31 @@ const ROWS_TOP = GLYPH_ROW_H + 8;
 const ROWS_BOTTOM = ROWS_TOP + ROW_H * ROW_ORDER.length;
 const TICK_H = 5;
 const DAYLABEL_ROW_H = 18;
-const SVG_HEIGHT = ROWS_BOTTOM + TICK_H + DAYLABEL_ROW_H + 4;
+// Day-label row starts just past the tick marks (ROWS_BOTTOM + TICK_H),
+// plus a 2px breather - cross-referenced by `.trip-timeline-mini__daylabels`
+// `top` in TripTimeline.css; if this changes, that value must move with it.
+const DAYLABEL_TOP = ROWS_BOTTOM + TICK_H + 2;
+const SCRUB_CHIP_GAP = 4;
+const SCRUB_CHIP_H = 20;
+// Scrubber chip sits just below the day-label row - cross-referenced by
+// `.trip-timeline-mini__scrub-chip` `top` in TripTimeline.css, same sync
+// requirement as DAYLABEL_TOP above.
+const SCRUB_CHIP_TOP = DAYLABEL_TOP + DAYLABEL_ROW_H + SCRUB_CHIP_GAP;
+// `.trip-timeline__scroll` sets `overflow-x: auto`, and per the CSS overflow
+// spec (https://www.w3.org/TR/css-overflow-3/#overflow-properties) pairing
+// a non-`visible` axis with `visible` on the other coerces the `visible`
+// axis to `auto` too - so this wrapper is a vertical scroll container
+// whether it says so explicitly or not. A classic (non-overlay) horizontal
+// scrollbar is ~15-17px tall on Windows/Linux and eats into the *bottom* of
+// whatever height the wrapper resolves to, which used to land squarely on
+// the day-label row and scrub chip (previously positioned in a separate
+// `padding-bottom` region past the SVG's own height, i.e. exactly where a
+// scrollbar-eaten strip would clip them). Fix: every real element - SVG
+// rows, day labels, scrub chip - now lives *within* SVG_HEIGHT itself, with
+// this many px of genuinely empty margin below the lowest of them, so a
+// scrollbar can eat into blank space instead of content.
+const SCROLLBAR_SAFE_ZONE = 20;
+const SVG_HEIGHT = SCRUB_CHIP_TOP + SCRUB_CHIP_H + SCROLLBAR_SAFE_ZONE;
 const MIN_CHART_WIDTH = 460;
 
 const ROW_Y_TOP: Record<Status, number> = Object.fromEntries(
