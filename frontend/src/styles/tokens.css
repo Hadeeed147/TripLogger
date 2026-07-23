@@ -2,7 +2,7 @@
   TripLogger design tokens.
   ------------------------------------------------------------------------
   Design read: this is a data-dense, trust-critical operational tool (route
-  map + FMCSA ELD log sheets), not a marketing page — the anti-slop landing
+  map + FMCSA ELD log sheets), not a marketing page - the anti-slop landing
   page skill (design-taste-frontend) is out-of-scope for this surface by its
   own definition ("dashboards / dense product UI"). Its universal hygiene
   rules still apply and were used to derive these values: no pure
@@ -15,7 +15,7 @@
 */
 
 /* Inter itself is loaded via @fontsource/inter (400/500/600/700), imported
-   in main.tsx ahead of this stylesheet — no @font-face or CDN link here. */
+   in main.tsx ahead of this stylesheet - no @font-face or CDN link here. */
 
 :root {
   /* ---------------------------------------------------------------------
@@ -77,7 +77,7 @@
   --danger-500: #c1272d;
   --danger-100: #fbe9e8;
 
-  /* HOS duty-status colors — one per ELD grid row, used consistently
+  /* HOS duty-status colors - one per ELD grid row, used consistently
      across the log sheet, route stops, and legend. */
   --status-off: var(--surface-500);
   --status-sleeper: var(--navy-600);
@@ -85,7 +85,7 @@
   --status-on-duty: var(--warning-500);
 
   /* ---------------------------------------------------------------------
-     Semantic aliases (theme-swappable — see prefers-color-scheme below)
+     Semantic aliases (theme-swappable - see prefers-color-scheme below)
   --------------------------------------------------------------------- */
   --color-bg: var(--surface-50);
   --color-surface: var(--surface-0);
@@ -123,13 +123,13 @@
   --font-sans:
     "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
 
-  --text-xs: 0.75rem; /* 12px — remarks, captions */
-  --text-sm: 0.875rem; /* 14px — labels, secondary body */
-  --text-base: 1rem; /* 16px — body */
-  --text-md: 1.125rem; /* 18px — emphasized body */
-  --text-lg: 1.375rem; /* 22px — card headings */
-  --text-xl: 1.75rem; /* 28px — section headings */
-  --text-2xl: 2.25rem; /* 36px — page headings / hero stats */
+  --text-xs: 0.75rem; /* 12px - remarks, captions */
+  --text-sm: 0.875rem; /* 14px - labels, secondary body */
+  --text-base: 1rem; /* 16px - body */
+  --text-md: 1.125rem; /* 18px - emphasized body */
+  --text-lg: 1.375rem; /* 22px - card headings */
+  --text-xl: 1.75rem; /* 28px - section headings */
+  --text-2xl: 2.25rem; /* 36px - page headings / hero stats */
 
   --leading-tight: 1.15;
   --leading-snug: 1.35;
@@ -156,7 +156,7 @@
   --space-20: 5rem; /* 80 */
 
   /* ---------------------------------------------------------------------
-     Radii — one locked scale. Buttons/inputs: sm/md. Cards/panels: lg.
+     Radii - one locked scale. Buttons/inputs: sm/md. Cards/panels: lg.
      Pills/badges: full.
   --------------------------------------------------------------------- */
   --radius-sm: 6px;
@@ -165,7 +165,7 @@
   --radius-full: 999px;
 
   /* ---------------------------------------------------------------------
-     Shadows — tinted to navy (rgb(27 42 94)), never neutral/pure black.
+     Shadows - tinted to navy (rgb(27 42 94)), never neutral/pure black.
   --------------------------------------------------------------------- */
   --shadow-sm:
     0 1px 2px rgb(27 42 94 / 6%),
@@ -178,7 +178,7 @@
     0 4px 10px rgb(27 42 94 / 8%);
 
   /* ---------------------------------------------------------------------
-     Focus ring — accent-based, visible on both light and dark surfaces.
+     Focus ring - accent-based, visible on both light and dark surfaces.
   --------------------------------------------------------------------- */
   --focus-ring-color: var(--accent-500);
   --focus-ring: 0 0 0 3px rgb(47 111 237 / 35%);
@@ -186,7 +186,7 @@
   --focus-ring-offset: 2px;
 
   /* ---------------------------------------------------------------------
-     Motion — durations + easings. Used for the GSAP log-sheet stroke
+     Motion - durations + easings. Used for the GSAP log-sheet stroke
      draw-in and general UI transitions.
   --------------------------------------------------------------------- */
   --duration-fast: 120ms;
@@ -216,13 +216,13 @@
 }
 
 /* ---------------------------------------------------------------------
-   Dark mode — same brand hues, remapped surface/ink ramp. No pure black.
+   Dark mode - same brand hues, remapped surface/ink ramp. No pure black.
 
    Theme mechanism (Polish B): dark values live in TWO places that must be
-   kept in sync (duplicated on purpose — see comment on the second block):
+   kept in sync (duplicated on purpose - see comment on the second block):
      1. The @media block below applies dark tokens automatically whenever
         the OS prefers dark AND the user hasn't explicitly chosen a theme
-        (":root:not([data-theme=\"light\"])" — an explicit data-theme="light"
+        (":root:not([data-theme=\"light\"])" - an explicit data-theme="light"
         wins over a dark system preference).
      2. The ":root[data-theme=\"dark\"]" block right after it applies the
         same dark tokens when the user explicitly picked dark via the
@@ -231,7 +231,7 @@
         ("triplogger-theme") and re-applied before first paint by the
         inline snippet in index.html, so there is no flash of the wrong
         theme. The base ":root" above already holds the light values, so
-        no separate ":root[data-theme=\"light\"]" color block is needed —
+        no separate ":root[data-theme=\"light\"]" color block is needed -
         only a color-scheme override (below) to force light native form
         controls/scrollbars even when the OS is dark.
 --------------------------------------------------------------------- */
@@ -281,7 +281,7 @@
 }
 
 /* Explicit dark choice (header toggle). Duplicate of the media block above
-   — if you change one, change both. Kept as a literal duplicate rather than
+   - if you change one, change both. Kept as a literal duplicate rather than
    a shared class-like construct because CSS custom properties have no
    @mixin/@include equivalent; a preprocessor is out of scope for this
    project (tokens.css is plain CSS, no Sass/PostCSS nesting-vars build

@@ -21,7 +21,7 @@ def test_geocode_success_and_cache(monkeypatch):
     monkeypatch.setattr(geocoding.requests, "get",
         lambda url, **kw: calls.append(url) or FakeResp([{"display_name": "Chicago, Cook County, Illinois", "lat": "41.88", "lon": "-87.63"}]))
     r1 = geocoding.geocode("chicago")
-    r2 = geocoding.geocode("Chicago ")          # cache hit — same normalized key
+    r2 = geocoding.geocode("Chicago ")          # cache hit - same normalized key
     assert r1["lat"] == 41.88 and r1["lng"] == -87.63
     assert len(calls) == 1 and r1 == r2 | {"query": "chicago"}
 
@@ -39,7 +39,7 @@ def test_reverse_never_raises(monkeypatch):
 def test_route_flips_geometry_and_floors_speed(monkeypatch):
     payload = {"code": "Ok", "routes": [{
         "distance": 1609344.0,                      # 1000 miles
-        "duration": 12 * 3600,                      # 12h — car-optimistic
+        "duration": 12 * 3600,                      # 12h - car-optimistic
         "geometry": {"coordinates": [[-87.63, 41.88], [-104.99, 39.74]]},
     }]}
     monkeypatch.setattr(routing.requests, "get", lambda url, **kw: FakeResp(payload))

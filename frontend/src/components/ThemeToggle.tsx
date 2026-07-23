@@ -5,7 +5,7 @@ import { applyTheme, getInitialTheme, persistTheme, type Theme } from "../theme"
 /**
  * Sun/moon icon toggle for the app header. Two-state (light/dark): initial
  * value comes from getInitialTheme() (saved localStorage choice, else OS
- * preference — see src/theme.ts), and the same value has already been
+ * preference - see src/theme.ts), and the same value has already been
  * applied to <html data-theme> before first paint by the inline snippet in
  * index.html, so this component's first render always matches what's on
  * screen (no flash, no mismatch).

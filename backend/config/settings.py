@@ -140,7 +140,7 @@ STATIC_URL = 'static/'
 STATIC_ROOT = BASE_DIR / 'staticfiles'
 
 # CompressedStaticFilesStorage (not the Manifest variant) since this API-only
-# backend ships no static assets of its own beyond admin/DRF's bundled files —
+# backend ships no static assets of its own beyond admin/DRF's bundled files -
 # manifest hashing/versioning buys nothing here and Manifest mode hard-fails
 # collectstatic if any referenced file is missing.
 STORAGES = {

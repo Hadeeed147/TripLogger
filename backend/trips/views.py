@@ -96,7 +96,7 @@ class TripPlanView(APIView):
                     "lng": lng,
                     "arrival": seg.start.isoformat(),
                     "duration_min": round(seg.minutes),
-                    "label": f"{seg.label} — {location}",
+                    "label": f"{seg.label} - {location}",
                     "miles_from_origin": round(seg.start_odometer, 1),
                 }
             )

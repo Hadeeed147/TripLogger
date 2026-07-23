@@ -9,7 +9,7 @@ export interface TripRequest {
   pickup_location: string;
   dropoff_location: string;
   current_cycle_used: number;
-  /** ISO 8601 datetime string. Optional — defaults server-side to "now" rounded up to next 15 min. */
+  /** ISO 8601 datetime string. Optional - defaults server-side to "now" rounded up to next 15 min. */
   departure_time?: string;
 }
 

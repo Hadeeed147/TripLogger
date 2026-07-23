@@ -19,3 +19,6 @@ dist/
 .claude/
 .agents/
 skills-lock.json
+
+# Personal recording script, not published
+docs/loom-outline.md

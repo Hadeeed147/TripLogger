@@ -10,18 +10,18 @@
 
 ## Global Constraints
 
-- Spec: `docs/superpowers/specs/2026-07-21-triplogger-design.md` — authoritative for all rules.
+- Spec: `docs/superpowers/specs/2026-07-21-triplogger-design.md` - authoritative for all rules.
 - HOS constants (minutes/miles, exact): drive limit 660, window 840, break-after-drive 480, break 30, rest 600, restart 2040, cycle 4200, fuel interval 1000 mi, fuel stop 30, pickup/dropoff service 60. Max trip 5,000 route-miles.
 - Any ≥30 min consecutive non-driving period resets the 8-hour break accumulator.
-- Cycle budget = `70h − current_cycle_used`, replenished ONLY by auto-inserted 34 h restart. `restart_inserted` surfaced in summary.
+- Cycle budget = `70h - current_cycle_used`, replenished ONLY by auto-inserted 34 h restart. `restart_inserted` surfaced in summary.
 - Duty-status → grid-row mapping: 10 h rest → `sleeper`; 30 min break → `off`; 34 h restart → `off`; pickup/dropoff/fuel → `on_duty`.
 - Truck duration floor: `minutes = max(provider_minutes, miles / 55 * 60)` applied per leg in routing service.
 - All engine datetimes are naive "home terminal time". Log grids are 15-min snapped and every day totals exactly 1440 min.
-- No live network in tests — mock Nominatim/OSRM with `monkeypatch`.
+- No live network in tests - mock Nominatim/OSRM with `monkeypatch`.
 - Nominatim: custom `User-Agent: TripLogger/1.0 (mohammadhadeed8@gmail.com)`, server-side only, cached via Django locmem cache.
 - Commits: conventional messages (`feat:`, `test:`, `chore:`, `docs:`), one per task minimum, each ends with the Claude co-author trailer.
-- Backend venv lives at `backend/.venv` (root `Lib/`+`Scripts/` are a stray venv, already gitignored — ignore them).
-- Frontend styling decisions during Tasks 13–17 MUST be made by invoking the `design-taste-frontend` skill; motion via `gsap-react` skill; component baselines may come from 21st.dev MCP (`mcp__21st__search`). Palette tokens: navy `#1B2A5E` primary, signal blue `#2F6FED` accent, Inter, `font-variant-numeric: tabular-nums` on all figures.
+- Backend venv lives at `backend/.venv` (root `Lib/`+`Scripts/` are a stray venv, already gitignored - ignore them).
+- Frontend styling decisions during Tasks 13-17 MUST be made by invoking the `design-taste-frontend` skill; motion via `gsap-react` skill; component baselines may come from 21st.dev MCP (`mcp__21st__search`). Palette tokens: navy `#1B2A5E` primary, signal blue `#2F6FED` accent, Inter, `font-variant-numeric: tabular-nums` on all figures.
 
 ---
 
@@ -138,7 +138,7 @@ class Timeline:
     restart_inserted: bool = False
 ```
 
-- [ ] **Step 1: Write failing test** — `trips/tests/test_hos_models.py`:
+- [ ] **Step 1: Write failing test** - `trips/tests/test_hos_models.py`:
 
 ```python
 from datetime import datetime
@@ -170,7 +170,7 @@ def test_segment_minutes_and_end_odometer():
 
 ---
 
-### Task 3: Engine — basic trip flow (drive, pickup, dropoff)
+### Task 3: Engine - basic trip flow (drive, pickup, dropoff)
 
 **Files:**
 - Create: `backend/trips/hos/engine.py`
@@ -179,7 +179,7 @@ def test_segment_minutes_and_end_odometer():
 **Interfaces:**
 - Produces: `plan_trip(legs: list[Leg], cycle_used_hrs: float, start: datetime) -> Timeline` and `TripTooLongError(ValueError)`. Constants module-level, names exactly: `MAX_DRIVE_MIN=660, WINDOW_MIN=840, DRIVE_BEFORE_BREAK_MIN=480, BREAK_MIN=30, REST_MIN=600, RESTART_MIN=2040, CYCLE_MIN=4200, FUEL_INTERVAL_MILES=1000.0, FUEL_STOP_MIN=30, SERVICE_STOP_MIN=60, MAX_TRIP_MILES=5000.0, EPS=1e-6`.
 
-- [ ] **Step 1: Failing tests** — `trips/tests/test_engine.py`:
+- [ ] **Step 1: Failing tests** - `trips/tests/test_engine.py`:
 
 ```python
 from datetime import datetime
@@ -219,7 +219,7 @@ def test_odometer_tracks_route_miles():
 
 - [ ] **Step 2: Run** → FAIL (no engine module).
 
-- [ ] **Step 3: Implement** `trips/hos/engine.py` (complete file — later tasks only make its limit branches reachable, the structure is final now):
+- [ ] **Step 3: Implement** `trips/hos/engine.py` (complete file - later tasks only make its limit branches reachable, the structure is final now):
 
 ```python
 from __future__ import annotations
@@ -363,7 +363,7 @@ def plan_trip(legs: list[Leg], cycle_used_hrs: float, start: datetime) -> Timeli
 
 ---
 
-### Task 4: Engine — 30-minute break rule
+### Task 4: Engine - 30-minute break rule
 
 **Files:**
 - Modify: none expected (branches exist); Test: append to `backend/trips/tests/test_engine.py`
@@ -396,12 +396,12 @@ def test_pickup_resets_break_accumulator():
     assert all(s.label != "30-min break" for s in tl.segments)
 ```
 
-- [ ] **Step 2: Run** → these should PASS already if Task 3 was implemented exactly as written (the branches exist). If any fail, fix `engine.py` — do NOT weaken assertions.
+- [ ] **Step 2: Run** → these should PASS already if Task 3 was implemented exactly as written (the branches exist). If any fail, fix `engine.py` - do NOT weaken assertions.
 - [ ] **Step 3: Commit** `git commit -am "test: 30-minute break rule coverage"`
 
 ---
 
-### Task 5: Engine — 11-hour / 14-hour limits and 10-hour rest
+### Task 5: Engine - 11-hour / 14-hour limits and 10-hour rest
 
 **Files:**
 - Test: append to `backend/trips/tests/test_engine.py`
@@ -442,14 +442,14 @@ def test_rest_resets_all_shift_accumulators():
     assert post.minutes > 300  # not immediately re-broken
 ```
 
-Note for the 1,320-mile case: fuel fires at 1,000 mi — the third assertion only checks the first post-rest driving chunk is long, which holds (340 min to the fuel stop).
+Note for the 1,320-mile case: fuel fires at 1,000 mi - the third assertion only checks the first post-rest driving chunk is long, which holds (340 min to the fuel stop).
 
 - [ ] **Step 2: Run** → all PASS with Task 3 code (branches already exist); fix engine if not.
 - [ ] **Step 3: Commit** `git commit -am "test: 11h/14h limits and 10h rest coverage"`
 
 ---
 
-### Task 6: Engine — fuel stops and break-merge rule
+### Task 6: Engine - fuel stops and break-merge rule
 
 **Files:**
 - Test: append to `backend/trips/tests/test_engine.py`
@@ -483,7 +483,7 @@ def test_fuel_stop_satisfies_30min_break():
 
 ---
 
-### Task 7: Engine — 70-hour cycle and 34-hour restart
+### Task 7: Engine - 70-hour cycle and 34-hour restart
 
 **Files:**
 - Test: append to `backend/trips/tests/test_engine.py`
@@ -550,9 +550,9 @@ def test_timeline_invariants_across_scenarios():
 - Test: `backend/trips/tests/test_polyline.py`
 
 **Interfaces:**
-- Produces: `point_at_mile(geometry: list[tuple[float, float]], mile: float) -> tuple[float, float]` — geometry is `[(lat, lng), ...]`; clamps to endpoints; linear interpolation between vertices by haversine distance. Also `total_miles(geometry) -> float`.
+- Produces: `point_at_mile(geometry: list[tuple[float, float]], mile: float) -> tuple[float, float]` - geometry is `[(lat, lng), ...]`; clamps to endpoints; linear interpolation between vertices by haversine distance. Also `total_miles(geometry) -> float`.
 
-- [ ] **Step 1: Failing test** — `trips/tests/test_polyline.py`:
+- [ ] **Step 1: Failing test** - `trips/tests/test_polyline.py`:
 
 ```python
 from trips.services.polyline import point_at_mile, total_miles
@@ -644,7 +644,7 @@ def build_day_logs(timeline: Timeline) -> list[DayLog]
 
 Algorithm: 1) pad timeline with leading OFF from midnight of day one to first segment start, and trailing OFF to midnight after last segment end; 2) split every segment at midnight boundaries, prorating `miles` by time fraction; 3) per day, snap each boundary to `round(minute / 15) * 15` keeping 0 and 1440 fixed and enforcing monotonicity, drop zero-length entries, merge adjacent same-status entries; 4) totals from snapped grid; per-day `total_miles` = sum of prorated driving miles (unsnapped, rounded to 0.1); 5) remarks: one per labeled non-`Driving` segment at its snapped start. Full implementation in Step 3.
 
-- [ ] **Step 1: Failing tests** — `trips/tests/test_logsheets.py`:
+- [ ] **Step 1: Failing tests** - `trips/tests/test_logsheets.py`:
 
 ```python
 from datetime import datetime
@@ -841,7 +841,7 @@ def get_route(a: tuple[float, float], b: tuple[float, float]) -> dict
 
 Implementation notes (bake in): base URLs `https://nominatim.openstreetmap.org` and `https://router.project-osrm.org`; `HEADERS = {"User-Agent": "TripLogger/1.0 (mohammadhadeed8@gmail.com)"}`; timeout 10 s; `geocode` caches by `f"geo:{query.strip().lower()}"` and `reverse` by rounded 3-dp coords via `django.core.cache`; `reverse` uses `zoom=10` and assembles `city, state-abbrev` (state abbrev from `address["ISO3166-2-lvl4"].split("-")[1]` fallback full state name, city from first of `city|town|village|hamlet|county`); OSRM path `/route/v1/driving/{lng_a},{lat_a};{lng_b},{lat_b}?overview=full&geometries=geojson`, meters→miles `/1609.344`, seconds→minutes `/60`, then `minutes = max(minutes, miles / 55 * 60)`, geojson `[lng,lat]` flipped to `(lat,lng)`; one retry on `requests.RequestException`/5xx then raise `RoutingError`.
 
-- [ ] **Step 1: Failing tests** — `trips/tests/test_services.py` (mock `requests.get` with `monkeypatch`; use `django.core.cache.cache.clear()` in a fixture):
+- [ ] **Step 1: Failing tests** - `trips/tests/test_services.py` (mock `requests.get` with `monkeypatch`; use `django.core.cache.cache.clear()` in a fixture):
 
 ```python
 import pytest
@@ -867,7 +867,7 @@ def test_geocode_success_and_cache(monkeypatch):
     monkeypatch.setattr(geocoding.requests, "get",
         lambda url, **kw: calls.append(url) or FakeResp([{"display_name": "Chicago, Cook County, Illinois", "lat": "41.88", "lon": "-87.63"}]))
     r1 = geocoding.geocode("chicago")
-    r2 = geocoding.geocode("Chicago ")          # cache hit — same normalized key
+    r2 = geocoding.geocode("Chicago ")          # cache hit - same normalized key
     assert r1["lat"] == 41.88 and r1["lng"] == -87.63
     assert len(calls) == 1 and r1 == r2 | {"query": "chicago"}
 
@@ -885,7 +885,7 @@ def test_reverse_never_raises(monkeypatch):
 def test_route_flips_geometry_and_floors_speed(monkeypatch):
     payload = {"code": "Ok", "routes": [{
         "distance": 1609344.0,                      # 1000 miles
-        "duration": 12 * 3600,                      # 12h — car-optimistic
+        "duration": 12 * 3600,                      # 12h - car-optimistic
         "geometry": {"coordinates": [[-87.63, 41.88], [-104.99, 39.74]]},
     }]}
     monkeypatch.setattr(routing.requests, "get", lambda url, **kw: FakeResp(payload))
@@ -917,11 +917,11 @@ def test_route_retries_then_raises(monkeypatch):
 - Test: `backend/trips/tests/test_api.py`
 
 **Interfaces:**
-- Consumes: everything above. Produces the exact response contract from the spec ("API contract" section) — field names verbatim; frontend types in Task 12 mirror it.
+- Consumes: everything above. Produces the exact response contract from the spec ("API contract" section) - field names verbatim; frontend types in Task 12 mirror it.
 
-View flow (implement in `TripPlanView(APIView).post`): validate via `TripRequestSerializer` (`current_location`/`pickup_location`/`dropoff_location`: CharField; `current_cycle_used`: FloatField 0–70; `departure_time`: DateTimeField optional → default `datetime.now()` rounded UP to next 15 min, tz stripped) → `geocode()` ×3 (on `GeocodeError` → 422 `{"detail": "...", "field": "pickup_location"}`) → `get_route()` ×2 (on `RoutingError` → 502) → build `legs`, concatenate geometries → `plan_trip()` (on `TripTooLongError` → 422) → for each non-Driving segment compute `(lat, lng) = point_at_mile(geometry, seg.start_odometer)`, set `seg.location = reverse(lat, lng) or nearest_endpoint_name`, collect into `stops` list (`type` map: `Pickup→pickup, Dropoff→dropoff, Fuel stop→fuel, 30-min break→break, 10-hour rest→rest, 34-hour restart→restart`) → `build_day_logs()` → assemble response dict exactly per spec.
+View flow (implement in `TripPlanView(APIView).post`): validate via `TripRequestSerializer` (`current_location`/`pickup_location`/`dropoff_location`: CharField; `current_cycle_used`: FloatField 0-70; `departure_time`: DateTimeField optional → default `datetime.now()` rounded UP to next 15 min, tz stripped) → `geocode()` ×3 (on `GeocodeError` → 422 `{"detail": "...", "field": "pickup_location"}`) → `get_route()` ×2 (on `RoutingError` → 502) → build `legs`, concatenate geometries → `plan_trip()` (on `TripTooLongError` → 422) → for each non-Driving segment compute `(lat, lng) = point_at_mile(geometry, seg.start_odometer)`, set `seg.location = reverse(lat, lng) or nearest_endpoint_name`, collect into `stops` list (`type` map: `Pickup→pickup, Dropoff→dropoff, Fuel stop→fuel, 30-min break→break, 10-hour rest→rest, 34-hour restart→restart`) → `build_day_logs()` → assemble response dict exactly per spec.
 
-- [ ] **Step 1: Failing tests** — `trips/tests/test_api.py` (mock `trips.views.geocode`, `trips.views.reverse`, `trips.views.get_route` with monkeypatch; straight-line geometry Chicago→Denver→LA):
+- [ ] **Step 1: Failing tests** - `trips/tests/test_api.py` (mock `trips.views.geocode`, `trips.views.reverse`, `trips.views.get_route` with monkeypatch; straight-line geometry Chicago→Denver→LA):
 
 ```python
 import pytest
@@ -1017,7 +1017,7 @@ npm create vite@latest frontend -- --template react-ts
 cd frontend && npm install && npm install leaflet react-leaflet gsap && npm install -D @types/leaflet
 ```
 
-- [ ] **Step 2: Write `src/api/types.ts` + `src/api/client.ts`** — types transcribed from the spec contract; client:
+- [ ] **Step 2: Write `src/api/types.ts` + `src/api/client.ts`** - types transcribed from the spec contract; client:
 
 ```ts
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:8000";
@@ -1042,7 +1042,7 @@ export async function planTrip(req: TripRequest): Promise<TripPlan> {
 }
 ```
 
-- [ ] **Step 3: `src/styles/tokens.css`** — CSS custom properties: `--navy: #1B2A5E; --accent: #2F6FED;` plus surface/ink/success/warning scale, Inter via `@font-face`/fontsource, global `font-variant-numeric: tabular-nums` on `.num`. (Final values: invoke `design-taste-frontend` skill now and lock the token set it produces.)
+- [ ] **Step 3: `src/styles/tokens.css`** - CSS custom properties: `--navy: #1B2A5E; --accent: #2F6FED;` plus surface/ink/success/warning scale, Inter via `@font-face`/fontsource, global `font-variant-numeric: tabular-nums` on `.num`. (Final values: invoke `design-taste-frontend` skill now and lock the token set it produces.)
 - [ ] **Step 4: Verify** `npm run build` → succeeds; `npx tsc --noEmit` → clean.
 - [ ] **Step 5: Commit** `git add frontend && git commit -m "feat: frontend scaffold with typed API client and design tokens"`
 
@@ -1055,10 +1055,10 @@ export async function planTrip(req: TripRequest): Promise<TripPlan> {
 - Modify: `frontend/src/App.tsx`
 
 **Interfaces:**
-- Produces: `<TripForm onSubmit={(req: TripRequest) => void} loading: boolean />` — three location text inputs (icons: truck / package-up / package-down), cycle-used number input 0–70 step 0.5, collapsible "departure time" `datetime-local` defaulting to now-rounded-up-15-min, submit button with loading state. Client-side validation mirrors server (required fields, 0 ≤ cycle ≤ 70) with inline error text. `App.tsx` holds `{plan, loading, error}` state: form → `planTrip` → results area; `ApiError.field` highlights the matching input; 502/network shows a retry banner.
+- Produces: `<TripForm onSubmit={(req: TripRequest) => void} loading: boolean />` - three location text inputs (icons: truck / package-up / package-down), cycle-used number input 0-70 step 0.5, collapsible "departure time" `datetime-local` defaulting to now-rounded-up-15-min, submit button with loading state. Client-side validation mirrors server (required fields, 0 ≤ cycle ≤ 70) with inline error text. `App.tsx` holds `{plan, loading, error}` state: form → `planTrip` → results area; `ApiError.field` highlights the matching input; 502/network shows a retry banner.
 
-- [ ] **Step 1: Implement** form + wire into App with a results placeholder (`<pre>{JSON.stringify(plan.summary)}</pre>` for now). Baseline input/button components: query 21st.dev MCP (`mcp__21st__search` "input with icon", "primary button") and restyle with tokens; if MCP results don't fit, hand-roll — tokens rule either way.
-- [ ] **Step 2: Verify** against local backend: `backend/.venv/Scripts/python manage.py runserver` + `npm run dev`, submit Chicago→Denver→LA, cycle 10 → summary JSON renders; bad city shows field error. (Live Nominatim/OSRM here — manual check only, not CI.)
+- [ ] **Step 1: Implement** form + wire into App with a results placeholder (`<pre>{JSON.stringify(plan.summary)}</pre>` for now). Baseline input/button components: query 21st.dev MCP (`mcp__21st__search` "input with icon", "primary button") and restyle with tokens; if MCP results don't fit, hand-roll - tokens rule either way.
+- [ ] **Step 2: Verify** against local backend: `backend/.venv/Scripts/python manage.py runserver` + `npm run dev`, submit Chicago→Denver→LA, cycle 10 → summary JSON renders; bad city shows field error. (Live Nominatim/OSRM here - manual check only, not CI.)
 - [ ] **Step 3: Commit** `git commit -am "feat: trip input form with validation and error states"`
 
 ---
@@ -1070,9 +1070,9 @@ export async function planTrip(req: TripRequest): Promise<TripPlan> {
 
 **Interfaces:**
 - Consumes: `plan.route.geometry`, `plan.stops`, `plan.locations`.
-- Produces: `<RouteMap plan={TripPlan} />` — react-leaflet `MapContainer` + OSM `TileLayer` (attribution required), route `Polyline` in `--navy`, `divIcon` markers per stop type (distinct glyph + color: pickup ▲ accent, dropoff ■ navy, fuel ⛽ amber, break ● slate, rest ☾ indigo, restart ⏸ red), `Popup` per marker: label, arrival (formatted `EEE HH:mm`), duration, miles-from-origin. Auto `fitBounds` on plan change via a `useMap()` child effect.
+- Produces: `<RouteMap plan={TripPlan} />` - react-leaflet `MapContainer` + OSM `TileLayer` (attribution required), route `Polyline` in `--navy`, `divIcon` markers per stop type (distinct glyph + color: pickup ▲ accent, dropoff ■ navy, fuel ⛽ amber, break ● slate, rest ☾ indigo, restart ⏸ red), `Popup` per marker: label, arrival (formatted `EEE HH:mm`), duration, miles-from-origin. Auto `fitBounds` on plan change via a `useMap()` child effect.
 
-- [ ] **Step 1: Implement** (include `import "leaflet/dist/leaflet.css"` in component; set container height via CSS or map renders 0-tall — classic Leaflet gotcha).
+- [ ] **Step 1: Implement** (include `import "leaflet/dist/leaflet.css"` in component; set container height via CSS or map renders 0-tall - classic Leaflet gotcha).
 - [ ] **Step 2: Verify** in dev: full route visible, all stop types render popups with sane ETAs.
 - [ ] **Step 3: Commit** `git commit -am "feat: interactive route map with typed stop markers"`
 
@@ -1088,7 +1088,7 @@ export async function planTrip(req: TripRequest): Promise<TripPlan> {
 - Consumes: `DayLogDto`.
 - Produces: `<LogSheet day={DayLogDto} date={string} />` and pure helper `buildStepPath(grid: GridEntryDto[], x0: number, colWidth: number, rowY: Record<Status, number>): string` returning one SVG path `M/H/V` string: horizontal run on each entry's row at `x = x0 + min/1440 * (colWidth*24)... `, vertical line at each status change.
 
-Layout (viewBox `0 0 1000 620`): header block (date, total miles driving today, carrier "TripLogger Freight Co.", main office "Chicago, IL", vehicle "TRK-001"); grid at y 180–420: 24 hour columns with labels `Mid-night, 1..11, Noon, 1..11`, 15-min minor ticks, 4 duty rows labeled exactly `1. Off Duty / 2. Sleeper Berth / 3. Driving / 4. On Duty (not driving)`; right-edge per-row totals column (`h:mm`, from `day.totals`, sums caption `= 24:00`); remarks band y 440–560: 45°-rotated tick + city/state + note text at each remark's x-position, staggered to avoid overlap.
+Layout (viewBox `0 0 1000 620`): header block (date, total miles driving today, carrier "TripLogger Freight Co.", main office "Chicago, IL", vehicle "TRK-001"); grid at y 180-420: 24 hour columns with labels `Mid-night, 1..11, Noon, 1..11`, 15-min minor ticks, 4 duty rows labeled exactly `1. Off Duty / 2. Sleeper Berth / 3. Driving / 4. On Duty (not driving)`; right-edge per-row totals column (`h:mm`, from `day.totals`, sums caption `= 24:00`); remarks band y 440-560: 45°-rotated tick + city/state + note text at each remark's x-position, staggered to avoid overlap.
 
 - [ ] **Step 1: Failing test** for `buildStepPath`:
 
@@ -1109,12 +1109,12 @@ test("two-status day produces one vertical transition", () => {
 
 - [ ] **Step 2: Run** `npx vitest run` → FAIL. **Step 3: Implement** `stepPath.ts` (pure string builder). **Step 4:** PASS.
 - [ ] **Step 5: Implement `LogSheet.tsx`** rendering the full form around the path; step-line `stroke: var(--navy); stroke-width: 2.5; fill: none`.
-- [ ] **Step 6: Verify** in dev against a 3-day trip — compare side-by-side with the FMCSA sample grid (spec: "A Completed Grid"); totals column must equal 24:00 every day.
+- [ ] **Step 6: Verify** in dev against a 3-day trip - compare side-by-side with the FMCSA sample grid (spec: "A Completed Grid"); totals column must equal 24:00 every day.
 - [ ] **Step 7: Commit** `git commit -am "feat: SVG ELD daily log sheet replica"`
 
 ---
 
-### Task 16: Results dashboard — summary cards, day tabs, motion
+### Task 16: Results dashboard - summary cards, day tabs, motion
 
 **Files:**
 - Create: `frontend/src/components/TripSummary/TripSummary.tsx`, `frontend/src/components/DayTabs/DayTabs.tsx`, `frontend/src/components/LoadingSteps.tsx`
@@ -1125,8 +1125,8 @@ test("two-status day produces one vertical transition", () => {
 - Produces: dashboard = summary stat cards row (total miles, days, driving hrs, rests, fuel stops, arrival; `restart_inserted` ⇒ amber "34-hr restart required" callout card), `RouteMap`, `DayTabs` (one tab per log, `Mon 7/21` labels) hosting `LogSheet`. `LoadingSteps` shows the three pipeline phases ("Geocoding → Routing → Planning HOS") advanced on a timer while awaiting the API.
 
 - [ ] **Step 1: Implement** components (21st.dev MCP for stat-card/tab baselines, restyled).
-- [ ] **Step 2: Motion** — invoke `gsap-react` skill; implement with `useGSAP`: stagger-in stat cards (y+opacity, 0.06 s stagger), log step-line draw-in via `stroke-dasharray/dashoffset` tween on tab mount/switch (0.9 s, `power2.out`), number count-up on stat values, marker drop-in stagger. Wrap in `gsap.matchMedia()` honoring `prefers-reduced-motion`.
-- [ ] **Step 3: Design pass** — re-invoke `design-taste-frontend` skill against the assembled dashboard; fix spacing/hierarchy/empty+error states.
+- [ ] **Step 2: Motion** - invoke `gsap-react` skill; implement with `useGSAP`: stagger-in stat cards (y+opacity, 0.06 s stagger), log step-line draw-in via `stroke-dasharray/dashoffset` tween on tab mount/switch (0.9 s, `power2.out`), number count-up on stat values, marker drop-in stagger. Wrap in `gsap.matchMedia()` honoring `prefers-reduced-motion`.
+- [ ] **Step 3: Design pass** - re-invoke `design-taste-frontend` skill against the assembled dashboard; fix spacing/hierarchy/empty+error states.
 - [ ] **Step 4: Verify** `npm run build` + `npx tsc --noEmit` clean; manual run-through of happy path, geocode error, cycle=69 restart trip, same-day short trip.
 - [ ] **Step 5: Commit** `git commit -am "feat: results dashboard with stat cards, day tabs, GSAP motion"`
 
@@ -1141,10 +1141,10 @@ test("two-status day produces one vertical transition", () => {
 **Interfaces:**
 - Produces: live URLs. Frontend env `VITE_API_URL=https://<render-app>.onrender.com`.
 
-- [ ] **Step 1: Settings hardening** — env-driven `SECRET_KEY`, `DEBUG` (default `"0"`), `ALLOWED_HOSTS` (comma-split), `CORS_ALLOWED_ORIGINS` env-driven replacing allow-all when `DEBUG=0`; whitenoise middleware + `STATIC_ROOT`.
-- [ ] **Step 2: `render.yaml`** — python web service, `buildCommand: pip install -r backend/requirements.txt && python backend/manage.py collectstatic --noinput`, `startCommand: cd backend && gunicorn config.wsgi`, env vars listed with `sync: false` for secrets.
+- [ ] **Step 1: Settings hardening** - env-driven `SECRET_KEY`, `DEBUG` (default `"0"`), `ALLOWED_HOSTS` (comma-split), `CORS_ALLOWED_ORIGINS` env-driven replacing allow-all when `DEBUG=0`; whitenoise middleware + `STATIC_ROOT`.
+- [ ] **Step 2: `render.yaml`** - python web service, `buildCommand: pip install -r backend/requirements.txt && python backend/manage.py collectstatic --noinput`, `startCommand: cd backend && gunicorn config.wsgi`, env vars listed with `sync: false` for secrets.
 - [ ] **Step 3: Deploy** backend → Render, frontend → Vercel (`npx vercel --prod` from `frontend/` or dashboard; set `VITE_API_URL`). Add Vercel domain to backend CORS env.
-- [ ] **Step 4: Verify live** — hosted frontend plans Chicago→Denver→LA end-to-end; check Render logs for Nominatim/OSRM errors.
+- [ ] **Step 4: Verify live** - hosted frontend plans Chicago→Denver→LA end-to-end; check Render logs for Nominatim/OSRM errors.
 - [ ] **Step 5: Commit** `git commit -am "chore: production settings and deploy configs"`
 
 ---
@@ -1154,7 +1154,7 @@ test("two-status day produces one vertical transition", () => {
 **Files:**
 - Create: `README.md`, `docs/loom-outline.md`
 
-- [ ] **Step 1: README** — live URLs, screenshot/GIF, architecture diagram (mermaid), the full HOS assumptions list copied from spec "Assumptions", local dev quickstart (backend + frontend), test instructions, API contract summary.
-- [ ] **Step 2: `docs/loom-outline.md`** — 3–5 min script: (0:00) demo happy path LA trip, (1:00) log sheet walkthrough vs. real FMCSA form, (2:00) HOS engine + tests tour, (3:30) architecture + deploy, (4:30) edge cases (cycle=69 restart demo).
-- [ ] **Step 3: Final check** — `pytest -q` all green, `npm run build` clean, push to GitHub (`gh repo create` — ask user for repo visibility/name if not specified).
+- [ ] **Step 1: README** - live URLs, screenshot/GIF, architecture diagram (mermaid), the full HOS assumptions list copied from spec "Assumptions", local dev quickstart (backend + frontend), test instructions, API contract summary.
+- [ ] **Step 2: `docs/loom-outline.md`** - 3-5 min script: (0:00) demo happy path LA trip, (1:00) log sheet walkthrough vs. real FMCSA form, (2:00) HOS engine + tests tour, (3:30) architecture + deploy, (4:30) edge cases (cycle=69 restart demo).
+- [ ] **Step 3: Final check** - `pytest -q` all green, `npm run build` clean, push to GitHub (`gh repo create` - ask user for repo visibility/name if not specified).
 - [ ] **Step 4: Commit** `git commit -am "docs: README and Loom outline"`

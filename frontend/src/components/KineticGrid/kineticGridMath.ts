@@ -1,7 +1,7 @@
 /**
  * Pure math helpers for KineticGrid, split out from the component (which is
  * all canvas/rAF/DOM side effects) so the actual warp/falloff/color math is
- * independently unit-testable without a DOM — same rationale as
+ * independently unit-testable without a DOM - same rationale as
  * LogSheet/stepPath.ts and RouteGlobe's exported projectLocation.
  */
 

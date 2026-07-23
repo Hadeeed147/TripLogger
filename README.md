@@ -1,19 +1,15 @@
 # TripLogger
 
-A full-stack trip planner for property-carrying truck drivers: enter your current location, pickup, dropoff, and current HOS cycle used, and get back a compliant route plan plus FMCSA-style ELD daily log sheets — computed on the fly, no login, no persistence.
+A full-stack trip planner for property-carrying truck drivers: enter your current location, pickup, dropoff, and current HOS cycle used, and get back a compliant route plan plus FMCSA-style ELD daily log sheets - computed on the fly, no login, no persistence.
 
 **Live app:** https://triplogger-hadeeed147s-projects.vercel.app
 **Live API:** https://triplogger-backend.onrender.com
 
 > The API runs on Render's free tier, which sleeps after ~15 minutes of inactivity. The first request after a nap takes ~50 seconds to wake the server; every request after that is immediate. An uptime pinger on `/api/health` keeps it warm.
 
-## Screenshot
-
-<!-- SCREENSHOT: add a screenshot or GIF of the results dashboard (map + stat cards + log sheet) here once the app is deployed. -->
-
 ## Architecture
 
-No database persistence — every trip is computed per-request from the four inputs. SQLite exists only for Django internals (admin/sessions), not app data.
+No database persistence - every trip is computed per-request from the four inputs. SQLite exists only for Django internals (admin/sessions), not app data.
 
 ```mermaid
 flowchart LR
@@ -24,7 +20,7 @@ flowchart LR
         Logs[LogSheet SVG]
     end
 
-    subgraph Backend["Django + DRF — POST /api/trips"]
+    subgraph Backend["Django + DRF - POST /api/trips"]
         Geocode[Nominatim geocoding]
         Route[OSRM routing]
         Engine[HOS engine\nplan_trip]
@@ -38,14 +34,14 @@ flowchart LR
     Sheets --> Logs
 ```
 
-Request flow: `POST /api/trips` geocodes the three locations (Nominatim, cached), routes the two legs current→pickup and pickup→dropoff (OSRM), runs them through `plan_trip()` (the pure-Python HOS engine), builds per-day log sheets with `build_day_logs()`, and returns one JSON payload that the map, stat cards, and SVG log sheets all render from — a single source of truth.
+Request flow: `POST /api/trips` geocodes the three locations (Nominatim, cached), routes the two legs current→pickup and pickup→dropoff (OSRM), runs them through `plan_trip()` (the pure-Python HOS engine), builds per-day log sheets with `build_day_logs()`, and returns one JSON payload that the map, stat cards, and SVG log sheets all render from - a single source of truth.
 
 ```
 TripLogger/
 ├── backend/                  # Django 5 + DRF, Python 3.13
 │   ├── config/                # settings, urls, wsgi
 │   ├── trips/
-│   │   ├── hos/               # pure Python — no Django imports, no I/O
+│   │   ├── hos/               # pure Python - no Django imports, no I/O
 │   │   │   ├── models.py      # DutyStatus, Leg, Segment, Timeline, DayLog
 │   │   │   ├── engine.py      # plan_trip(legs, cycle_used_hrs, start_dt) -> Timeline
 │   │   │   └── logsheets.py   # build_day_logs(timeline) -> list[DayLog]
@@ -68,7 +64,7 @@ TripLogger/
 These are the simplifications the HOS engine makes, copied verbatim from the design spec:
 
 - Property-carrying driver, 70 hr/8-day cycle, no adverse driving conditions.
-- **Cycle budget simplification:** input is a single "cycle used" number, not 8 days of history, so `70 − cycle_used` is treated as a fixed budget replenished only by a 34-hour restart. True rolling drop-off is impossible from the given inputs.
+- **Cycle budget simplification:** input is a single "cycle used" number, not 8 days of history, so `70 - cycle_used` is treated as a fixed budget replenished only by a 34-hour restart. True rolling drop-off is impossible from the given inputs.
 - **Auto 34-hour restart:** when the cycle budget exhausts mid-trip, the engine inserts a 34 h off-duty restart (flagged in UI + summary) rather than rejecting the trip.
 - **Single clock:** entire timeline runs in the current location's timezone ("home terminal time" per FMCSA § 395.8). No per-state DST handling.
 - **Truck speed floor:** OSRM car-profile durations are floored at distance ÷ 55 mph.
@@ -90,7 +86,7 @@ source backend/.venv/bin/activate
 pip install -r backend/requirements.txt
 ```
 
-Set `DEBUG=1` for local dev — this enables `CORS_ALLOW_ALL_ORIGINS` (so the Vite dev server can call the API without extra config) and lets you use the insecure fallback `SECRET_KEY`. Without it the app defaults to production-safe settings (`DEBUG=0`) and CORS will reject the frontend origin unless `CORS_ALLOWED_ORIGINS` is also set.
+Set `DEBUG=1` for local dev - this enables `CORS_ALLOW_ALL_ORIGINS` (so the Vite dev server can call the API without extra config) and lets you use the insecure fallback `SECRET_KEY`. Without it the app defaults to production-safe settings (`DEBUG=0`) and CORS will reject the frontend origin unless `CORS_ALLOWED_ORIGINS` is also set.
 
 ```bash
 # from backend/
@@ -117,14 +113,14 @@ VITE_API_URL=http://127.0.0.1:8000
 ## Running tests
 
 ```bash
-# backend — from backend/, with the venv activated
+# backend - from backend/, with the venv activated
 python -m pytest
 
-# frontend — from frontend/
+# frontend - from frontend/
 npx vitest run
 ```
 
-Backend: 36 pytest cases covering the HOS engine (break/rest/cycle/restart rules, invariants), log-sheet building, polyline interpolation, geocoding/routing services (network mocked), and the API view (happy path + every error class). Frontend: vitest covers the log-sheet SVG step-path builder; visual/motion correctness is verified in-browser during development.
+Backend: 38 pytest cases covering the HOS engine (break/rest/cycle/restart rules, invariants), log-sheet building, polyline interpolation, geocoding/routing services (network mocked), and the API view (happy path + every error class). Frontend: vitest covers the log-sheet SVG step-path builder; visual/motion correctness is verified in-browser during development.
 
 ## API contract
 
@@ -137,7 +133,7 @@ Backend: 36 pytest cases covering the HOS engine (break/rest/cycle/restart rules
 | `current_location` | string | free-text location, geocoded server-side |
 | `pickup_location` | string | free-text location |
 | `dropoff_location` | string | free-text location |
-| `current_cycle_used` | number | hours already used in the 70 h/8-day cycle, 0–70 |
+| `current_cycle_used` | number | hours already used in the 70 h/8-day cycle, 0-70 |
 | `departure_time` | string (ISO 8601), optional | defaults to "now" rounded up to the next 15 min |
 
 **Response body (200):**
@@ -149,13 +145,13 @@ Backend: 36 pytest cases covering the HOS engine (break/rest/cycle/restart rules
 | `summary` | trip-level totals: `total_days`, `total_miles`, `driving_hrs`, `on_duty_hrs`, `rest_stops`, `fuel_stops`, `breaks`, `restart_inserted`, `arrival` |
 | `stops` | ordered list of stops (`pickup`, `dropoff`, `fuel`, `break`, `rest`, `restart`) with coordinates, arrival time, duration, and mile mark |
 | `segments` | ordered duty segments (`off`, `sleeper`, `driving`, `on_duty`) with start/end time and mileage |
-| `logs` | one entry per calendar day: 15-min-snapped `grid` covering 0–1440 min, per-status `totals` (sum to 1440), `total_miles`, and `remarks` (city/state + note at each duty change) |
+| `logs` | one entry per calendar day: 15-min-snapped `grid` covering 0-1440 min, per-status `totals` (sum to 1440), `total_miles`, and `remarks` (city/state + note at each duty change) |
 
 **Errors** (all shaped as `{ "detail": "...", "field": "..."? }`, rendered verbatim by the UI):
 
-- `400` — validation failure (missing fields, `current_cycle_used` outside 0–70)
-- `422` — geocode not found (names the offending field), unroutable leg, or trip exceeds 5,000 route-miles
-- `502` — Nominatim or OSRM unavailable after one retry
+- `400` - validation failure (missing fields, `current_cycle_used` outside 0-70)
+- `422` - geocode not found (names the offending field), unroutable leg, or trip exceeds 5,000 route-miles
+- `502` - Nominatim or OSRM unavailable after one retry
 
 ## Tech stack
 
